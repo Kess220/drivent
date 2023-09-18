@@ -7,13 +7,15 @@ import { exclude } from '@/utils/prisma-utils';
 // TODO - Receber o CEP por parâmetro nesta função.
 async function getAddressFromCEP(cep: string): Promise<AddressInfo | ErrorResponse> {
   try {
-    if (!/^\d{8}$/.test(cep)) {
+    const formatedCep = cep.replace('-', '').trim();
+
+    if (!/^\d{8}$/.test(formatedCep)) {
       return { error: 'CEP inválido' };
       // Verifica se o CEP é um número válido
     }
 
     // FIXME: está com CEP fixo!
-    const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+    const result = await request.get(`${process.env.VIA_CEP_API}/${formatedCep}/json/`);
 
     // Verifique se o CEP é válido, mas o endereço é inexistente
     if (result.data.erro === true) {
@@ -26,11 +28,12 @@ async function getAddressFromCEP(cep: string): Promise<AddressInfo | ErrorRespon
 
     // Mapeie as informações do endereço conforme necessário
     const addressInfo: AddressInfo = {
-      logradouro: result.data.logradouro,
-      complemento: result.data.complemento,
-      bairro: result.data.bairro,
-      cidade: result.data.localidade,
-      uf: result.data.uf,
+      street: result.data.logradouro,
+      addressDetail: result.data.complemento,
+      neighborhood: result.data.bairro,
+      city: result.data.localidade,
+      state: result.data.uf,
+      cep: formatedCep,
     };
 
     return addressInfo;
@@ -64,45 +67,35 @@ function getFirstAddress(firstAddress: Address): GetAddressResult {
 
 type GetAddressResult = Omit<Address, 'createdAt' | 'updatedAt' | 'enrollmentId'>;
 
-// async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
-//   try {
-//     // Valide o CEP antes de prosseguir
-//     const cep = params.address.cep;
-//     if (!/^\d{8}$/.test(cep)) {
-//       throw new Error('CEP inválido');
-//     }
-
-//     // Converta a data de nascimento para um objeto Date
-//     params.birthday = new Date(params.birthday);
-
-//     // Execute a operação de upsert para matrícula
-//     const enrollmentData = exclude(params, 'address');
-//     const newEnrollment = await enrollmentRepository.upsert(
-//       params.userId,
-//       enrollmentData,
-//       exclude(enrollmentData, 'userId'),
-//     );
-
-//     // Execute a operação de upsert para o endereço
-//     const address = getAddressForUpsert(cep);
-//     // const address = getAddressForUpsert(cep);
-//     await addressRepository.upsert(newEnrollment.id, address, address);
-//   } catch (error) {
-//     // Lide com erros aqui, por exemplo, registrando ou lançando exceções superiores
-//     console.error(error);
-//   }
-// }
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
-  const enrollment = exclude(params, 'address');
-  enrollment.birthday = new Date(enrollment.birthday);
-  const address = getAddressForUpsert(params.address);
+  try {
+    // Valide o CEP antes de prosseguir
+    const cep = params.address.cep;
+    // Converta a data de nascimento para um objeto Date
+    params.birthday = new Date(params.birthday);
 
-  // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-  await getAddressFromCEP(params.address.cep);
+    const number = params.address.number;
 
-  const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
+    const addressFromApi = await getAddressFromCEP(cep);
 
-  await addressRepository.upsert(newEnrollment.id, address, address);
+    const completeAddress: CreateAddressParams = { ...(addressFromApi as CreateAddressParams), number };
+
+    // Execute a operação de upsert para matrícula
+    const enrollmentWithoutAddress = exclude(params, 'address');
+
+    const newEnrollment = await enrollmentRepository.upsert(
+      params.userId,
+      enrollmentWithoutAddress,
+      exclude(enrollmentWithoutAddress, 'userId'),
+    );
+
+    // Execute a operação de upsert para o endereço
+    const address = getAddressForUpsert(completeAddress);
+    await addressRepository.upsert(newEnrollment.id, address, address);
+  } catch (error) {
+    // Lide com erros aqui, por exemplo, registrando ou lançando exceções superiores
+    console.error(error);
+  }
 }
 
 function getAddressForUpsert(address: CreateAddressParams) {
@@ -126,10 +119,4 @@ type ErrorResponse = {
   error: string;
 };
 
-type AddressInfo = {
-  logradouro: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-};
+type AddressInfo = Omit<CreateAddressParams, 'number'>;
