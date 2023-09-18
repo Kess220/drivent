@@ -27,7 +27,8 @@ export async function getAddressFromCEP(req: AuthenticatedRequest, res: Response
     const { cep } = req.query;
 
     // Verifique se o CEP foi fornecido
-    if (!cep || typeof cep !== 'string') {
+    if (!cep || typeof cep !== 'string' || !/^\d{8}$/.test(cep)) {
+      // O código acima verifica se o CEP não foi fornecido, não é uma string ou não tem exatamente 8 dígitos numéricos.
       return res.status(httpStatus.BAD_REQUEST).json({ error: 'CEP inválido' });
     }
 
