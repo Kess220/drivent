@@ -16,7 +16,7 @@ export const getTicketByUserId = async (userId: number) => {
   try {
     const enrollment = await prisma.enrollment.findUnique({
       where: {
-        userId: userId,
+        userId,
       },
       include: {
         Ticket: {
@@ -32,6 +32,37 @@ export const getTicketByUserId = async (userId: number) => {
     }
 
     return enrollment.Ticket;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createTicket = async (userId: number, ticketTypeId: number) => {
+  try {
+    // Verificar se o usuário tem uma inscrição válida
+    const enrollment = await prisma.enrollment.findFirst({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!enrollment) {
+      throw new Error('User does not have a valid enrollment.');
+    }
+
+    // Criar um novo ingresso (ticket) com status RESERVED
+    const ticket = await prisma.ticket.create({
+      data: {
+        status: 'RESERVED',
+        ticketTypeId: ticketTypeId,
+        enrollmentId: enrollment.id,
+      },
+      include: {
+        TicketType: true,
+      },
+    });
+
+    return ticket;
   } catch (error) {
     throw error;
   }

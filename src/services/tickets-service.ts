@@ -1,5 +1,5 @@
 // eslint-disable-next-line prettier/prettier
-import { getAllTicketTypes, getTicketByUserId } from '../repositories/tickets-repository';
+import { getAllTicketTypes, getTicketByUserId, createTicket } from '../repositories/tickets-repository';
 
 export const getAllTicketTypesService = async () => {
   try {
@@ -14,6 +14,15 @@ export const getAllTicketTypesService = async () => {
 export const getTicketByUserIdService = async (userId: number) => {
   try {
     const ticket = await getTicketByUserId(userId);
+    return ticket;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createTicketService = async (userId: number, ticketTypeId: number) => {
+  try {
+    const ticket = await createTicket(userId, ticketTypeId);
     return ticket;
   } catch (error) {
     throw error;
