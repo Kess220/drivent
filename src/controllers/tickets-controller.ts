@@ -1,65 +1,24 @@
-import { Request, Response } from 'express';
-import { getAllTicketTypesService, getTicketByUserIdService, createTicketService } from '../services/tickets-service';
-import { prisma } from '@/config';
+import { Response } from 'express';
+import httpStatus from 'http-status';
+import { AuthenticatedRequest } from '@/middlewares';
+import { ticketsService } from '@/services';
+import { InputTicketBody } from '@/protocols';
 
-export const getTicketTypesController = async (req: Request, res: Response) => {
-  try {
-    const ticketTypes = await getAllTicketTypesService();
+export async function getTicketTypes(req: AuthenticatedRequest, res: Response) {
+  const ticketTypes = await ticketsService.findTicketTypes();
+  return res.status(httpStatus.OK).send(ticketTypes);
+}
 
-    res.json(ticketTypes);
-  } catch (error) {
-    console.error('Error in getTicketTypesController:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
+export async function getTicket(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const ticket = await ticketsService.getTicketByUserId(userId);
+  res.status(httpStatus.OK).send(ticket);
+}
 
-export const getTicketsController = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    // Recupere o ID do usuário da sessão (você precisa implementar a autenticação do usuário)
-    const idUser = req.userId;
+export async function createTicket(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const { ticketTypeId } = req.body as InputTicketBody;
 
-    const ticket = await getTicketByUserIdService(idUser);
-
-    if (!ticket) {
-      return res.status(404).json({ error: 'User has no ticket.' });
-    }
-
-    res.status(200).json(ticket);
-  } catch (error) {
-    console.error('Error in getTicketsController:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-export const createTicketController = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const userId = req.userId;
-    const { ticketTypeId } = req.body;
-
-    if (!ticketTypeId) {
-      return res.status(400).json({ error: 'ticketTypeId is required in the request body.' });
-    }
-
-    const enrollment = await prisma.enrollment.findFirst({
-      where: {
-        userId: userId,
-      },
-    });
-
-    if (!enrollment) {
-      return res.status(404).json({ error: 'User does not have a valid enrollment.' });
-    }
-
-    // Criar o ingresso
-    const ticket = await createTicketService(userId, ticketTypeId);
-
-    res.status(201).json(ticket);
-  } catch (error) {
-    console.error('Error in createTicketController:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-interface AuthenticatedRequest extends Request {
-  userId: number;
+  const ticket = await ticketsService.createTicket(userId, ticketTypeId);
+  return res.status(httpStatus.CREATED).send(ticket);
 }

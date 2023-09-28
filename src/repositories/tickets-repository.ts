@@ -1,69 +1,56 @@
-import { PrismaClient } from '@prisma/client';
+import { TicketStatus } from '@prisma/client';
+import { prisma } from '@/config';
+import { CreateTicketParams } from '@/protocols';
 
-const prisma = new PrismaClient();
+async function findTicketTypes() {
+  const result = await prisma.ticketType.findMany();
+  return result;
+}
 
-export const getAllTicketTypes = async () => {
-  try {
-    const ticketTypes = await prisma.ticketType.findMany();
-    return ticketTypes;
-  } catch (error) {
-    console.error('Error fetching ticket types:', error);
-    throw error;
-  }
-};
+async function findTicketByEnrollmentId(enrollmentId: number) {
+  const result = await prisma.ticket.findUnique({
+    where: { enrollmentId },
+    include: { TicketType: true },
+  });
 
-export const getTicketByUserId = async (userId: number) => {
-  try {
-    const enrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId,
-      },
-      include: {
-        Ticket: {
-          include: {
-            TicketType: true,
-          },
-        },
-      },
-    });
+  return result;
+}
 
-    if (!enrollment) {
-      return null; // Retorne null se o usuário não tiver uma inscrição
-    }
+async function createTicket(ticket: CreateTicketParams) {
+  const result = await prisma.ticket.create({
+    data: ticket,
+    include: { TicketType: true },
+  });
 
-    return enrollment.Ticket;
-  } catch (error) {
-    throw error;
-  }
-};
+  return result;
+}
 
-export const createTicket = async (userId: number, ticketTypeId: number) => {
-  try {
-    // Verificar se o usuário tem uma inscrição válida
-    const enrollment = await prisma.enrollment.findFirst({
-      where: {
-        userId: userId,
-      },
-    });
+async function findTicketById(ticketId: number) {
+  const result = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { TicketType: true },
+  });
 
-    if (!enrollment) {
-      throw new Error('User does not have a valid enrollment.');
-    }
+  return result;
+}
 
-    // Criar um novo ingresso (ticket) com status RESERVED
-    const ticket = await prisma.ticket.create({
-      data: {
-        status: 'RESERVED',
-        ticketTypeId: ticketTypeId,
-        enrollmentId: enrollment.id,
-      },
-      include: {
-        TicketType: true,
-      },
-    });
+async function ticketProcessPayment(ticketId: number) {
+  const result = prisma.ticket.update({
+    where: {
+      id: ticketId,
+    },
+    data: {
+      status: TicketStatus.PAID,
+    },
+  });
 
-    return ticket;
-  } catch (error) {
-    throw error;
-  }
+  return result;
+}
+
+export const ticketsRepository = {
+  findTicketTypes,
+  findTicketByEnrollmentId,
+  createTicket,
+  findTicketById,
+  ticketProcessPayment,
 };

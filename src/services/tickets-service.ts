@@ -1,30 +1,41 @@
-// eslint-disable-next-line prettier/prettier
-import { getAllTicketTypes, getTicketByUserId, createTicket } from '../repositories/tickets-repository';
+import { TicketStatus } from '@prisma/client';
+import { invalidDataError, notFoundError } from '@/errors';
+import { CreateTicketParams } from '@/protocols';
+import { enrollmentRepository, ticketsRepository } from '@/repositories';
 
-export const getAllTicketTypesService = async () => {
-  try {
-    const ticketTypes = await getAllTicketTypes();
-    return ticketTypes;
-  } catch (error) {
-    console.error('Error in getAllTicketTypesService:', error);
-    throw new Error('Failed to retrieve ticket types. Please try again later.');
-  }
-};
+async function findTicketTypes() {
+  const ticketTypes = await ticketsRepository.findTicketTypes();
+  return ticketTypes;
+}
 
-export const getTicketByUserIdService = async (userId: number) => {
-  try {
-    const ticket = await getTicketByUserId(userId);
-    return ticket;
-  } catch (error) {
-    throw error;
-  }
-};
+async function getTicketByUserId(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) throw notFoundError();
 
-export const createTicketService = async (userId: number, ticketTypeId: number) => {
-  try {
-    const ticket = await createTicket(userId, ticketTypeId);
-    return ticket;
-  } catch (error) {
-    throw error;
-  }
+  const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
+  if (!ticket) throw notFoundError();
+
+  return ticket;
+}
+
+async function createTicket(userId: number, ticketTypeId: number) {
+  if (!ticketTypeId) throw invalidDataError('ticketTypeId');
+
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) throw notFoundError();
+
+  const ticketData: CreateTicketParams = {
+    enrollmentId: enrollment.id,
+    ticketTypeId,
+    status: TicketStatus.RESERVED,
+  };
+
+  const ticket = await ticketsRepository.createTicket(ticketData);
+  return ticket;
+}
+
+export const ticketsService = {
+  findTicketTypes,
+  getTicketByUserId,
+  createTicket,
 };

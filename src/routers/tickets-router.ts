@@ -1,13 +1,14 @@
 import { Router } from 'express';
-// eslint-disable-next-line prettier/prettier
-import { getTicketTypesController, getTicketsController, createTicketController } from '../controllers/tickets-controller';
+import { createTicket, getTicket, getTicketTypes } from '@/controllers';
 import { authenticateToken, validateBody } from '@/middlewares';
-import { ticketTypeSchema } from '@/schemas/ticketsTypes-schemas';
+import { ticketSchema } from '@/schemas/tickets-schemas';
 
 const ticketsRouter = Router();
 
-ticketsRouter.get('/types', authenticateToken, getTicketTypesController);
-ticketsRouter.get('/', authenticateToken, getTicketsController);
-ticketsRouter.post('/', authenticateToken, createTicketController);
+ticketsRouter
+  .all('/*', authenticateToken)
+  .get('/types', getTicketTypes)
+  .get('/', getTicket)
+  .post('/', validateBody(ticketSchema), createTicket);
 
 export { ticketsRouter };
