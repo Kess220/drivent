@@ -1,26 +1,15 @@
 /* eslint-disable prettier/prettier */
 import faker from '@faker-js/faker';
-import { Hotel } from '@prisma/client';
-import { prisma } from '@/config';
+import { Hotel, PrismaClient } from '@prisma/client';
 
-export async function createHotel(params: Partial<Hotel> = {}): Promise<Hotel> {
-  try {
-    const fakeHotel = {
-      id: faker.datatype.number(),
-      name: faker.company.companyName(),
-      image: faker.image.imageUrl(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...params,
-    };
+const prisma = new PrismaClient();
 
-    // Insira os dados falsos de hotel no banco de dados usando o Prisma
-    const insertedHotel = await prisma.hotel.create({
-      data: fakeHotel,
-    });
-
-    return insertedHotel;
-  } catch (error) {
-    throw new Error(`Erro ao inserir dados falsos de hotel: ${error.message}`);
-  }
+export function createHotel(params: Partial<Hotel> = {}): Promise<Hotel> {
+  return prisma.hotel.create({
+    data: {
+      name: params.name || faker.name.findName(),
+      image: params.image || faker.internet.url(),
+      updatedAt: params.updatedAt || new Date(),
+    },
+  });
 }

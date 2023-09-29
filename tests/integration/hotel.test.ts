@@ -1,26 +1,73 @@
 /* eslint-disable prettier/prettier */
 import supertest from 'supertest';
-import { createHotel } from '../factories/hotel-factory';
-import { cleanDb } from '../helpers';
-import app from '@/app';
+import * as jwt from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import { createEnrollmentWithAddress, createTicketType, createUser, createTicket, createHotel } from '../factories';
+import { cleanDb, generateValidToken } from '../helpers';
+import app, { init } from '@/app';
 
 const server = supertest(app);
+beforeAll(async () => {
+  await init();
+});
+beforeEach(async () => {
+  await cleanDb();
+});
 
 describe('Teste da rota GET /hotels', () => {
-  beforeAll(async () => {
-    // Insira os dados falsos de hotel no banco de dados antes de iniciar os testes
-    await createHotel();
-  });
-
-  afterAll(async () => {
-    // Limpeza após os testes
-    await cleanDb(); // Chama a função para limpar a tabela de hotéis
-  });
-
-  it('Deve retornar status 201 ao acessar a rota /hotels', async () => {
+  it('Deve retornar status 401 se não houver token de autenticação', async () => {
     const response = await server.get('/hotels');
 
-    // Verifique se o status da resposta é 201
-    expect(response.status).toBe(201);
+    // Verifique se o status da resposta é 401 (não autorizado)
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it('Deve responder com status 401 se não houver sessão para o token fornecido', async () => {
+    // Crie um usuário sem sessão no banco de dados
+    const userWithoutSession = await createUser();
+
+    // Gere um token com o ID do usuário (simulando um token inválido)
+    const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
+
+    // Faça uma solicitação à rota /hotels com o token inválido
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    // Verifique se a resposta possui status 401 (não autorizado)
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it('Deve retornar status 200 com os hotéis quando tiver um ticket, inscrição e hotéis disponíveis', async () => {
+    // Crie um usuário no banco de dados
+    const user = await createUser();
+
+    // Gere um token de autenticação válido para o usuário
+    const token = await generateValidToken(user);
+
+    // Crie um hotel no banco de dados
+    const hotel = await createHotel();
+
+    // Crie uma inscrição (enrollment) para o usuário
+    const enrollment = await createEnrollmentWithAddress(user);
+
+    // Crie um tipo de ticket com hotéis disponíveis
+    const ticketType = await createTicketType();
+
+    // Crie um ticket pago para a inscrição e o tipo de ticket
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+
+    // Faça uma solicitação à rota /hotels com o token válido
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    // Verifique se a resposta possui status 200 (OK)
+    expect(response.status).toBe(httpStatus.OK);
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: hotel.name,
+          image: hotel.image,
+        }),
+      ]),
+    );
   });
 });
