@@ -9,8 +9,12 @@ export async function listHotels(req: AuthenticatedRequest, res: Response) {
     const { userId } = req;
     const hotelsOrStatus = await getHotels(userId);
 
-    if (typeof hotelsOrStatus === 'number') {
-      return res.status(hotelsOrStatus).json({ message: httpStatus[hotelsOrStatus] });
+    if (hotelsOrStatus === httpStatus.NOT_FOUND) {
+      return res.status(httpStatus.NOT_FOUND).json({ message: 'Nenhum hotel encontrado.' });
+    }
+
+    if (hotelsOrStatus === httpStatus.PAYMENT_REQUIRED) {
+      return res.status(httpStatus.PAYMENT_REQUIRED).json({ message: 'Requer pagamento.' });
     }
 
     return res.status(httpStatus.OK).json(hotelsOrStatus);

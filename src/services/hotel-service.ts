@@ -8,13 +8,13 @@ async function getHotels(userId: number) {
     const hotels = await getHotelsRepository();
     const ticket = await ticketsService.getTicketByUserId(userId);
 
-    if (!hotels || hotels.length === 0) {
+    if (!hotels || hotels.length === 0 || !ticket) {
       return httpStatus.NOT_FOUND;
     }
 
-    if (!ticket || !hotels) {
-      return httpStatus.NOT_FOUND;
-    }
+    // if (!ticket) {
+    //   return httpStatus.NOT_FOUND;
+    // }
 
     if (ticket.status !== 'PAID' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
       return httpStatus.PAYMENT_REQUIRED;

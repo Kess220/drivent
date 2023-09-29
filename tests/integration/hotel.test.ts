@@ -37,34 +37,6 @@ describe('Teste da rota GET /hotels', () => {
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
 
-  // it('Deve retornar status 200 com os hotéis quando tiver um ticket, inscrição e hotéis disponíveis', async () => {
-  //   // Crie um usuário no banco de dados
-  //   const user = await createUser();
-
-  //   // Gere um token de autenticação válido para o usuário
-  //   const token = await generateValidToken(user);
-
-  //   // Crie um hotel no banco de dados
-  //   await createHotel();
-
-  //   // Crie uma inscrição (enrollment) para o usuário
-  //   const enrollment = await createEnrollmentWithAddress(user);
-
-  //   // Crie um tipo de ticket com hotéis disponíveis
-  //   const ticketType = await createTicketType();
-
-  //   // Crie um ticket pago para a inscrição e o tipo de ticket
-  //   await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
-
-  //   // Faça uma solicitação à rota /hotels com o token válido
-  //   const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-
-  //   // Verifique se a resposta possui status 200 (OK)
-  //   expect(response.status).toBe(httpStatus.OK);
-
-  //   console.log('Hotéis disponíveis:', response.body);
-  // });
-
   it('Deve retornar 404 caso não tenha hotels', async () => {
     // Crie um usuário no banco de dados
     const user = await createUser();
@@ -89,6 +61,34 @@ describe('Teste da rota GET /hotels', () => {
 
     // Verifique se a resposta possui status 404(NOT_FOUND)
     expect(response.status).toBe(httpStatus.NOT_FOUND);
+
+    // console.log('Hotéis disponíveis:', response.body);
+  });
+
+  it('Deve retornar 402 caso não tenha pago o ticket ', async () => {
+    // Crie um usuário no banco de dados
+    const user = await createUser();
+
+    // Gere um token de autenticação válido para o usuário
+    const token = await generateValidToken(user);
+
+    // Crie um hotel no banco de dados
+    await createHotel();
+
+    // Crie uma inscrição (enrollment) para o usuário
+    const enrollment = await createEnrollmentWithAddress(user);
+
+    // Crie um tipo de ticket com hotéis disponíveis
+    const ticketType = await createTicketType();
+
+    // Crie um ticket pago para a inscrição e o tipo de ticket
+    await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+
+    // Faça uma solicitação à rota /hotels com o token válido
+    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+    // Verifique se a resposta possui status 402(PAYMENT_REQUIRED)
+    expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
 
     // console.log('Hotéis disponíveis:', response.body);
   });
