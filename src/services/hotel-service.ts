@@ -2,7 +2,6 @@
 import httpStatus from 'http-status';
 import { getHotels as getHotelsRepository } from '../repositories/hotels-repository';
 import { ticketsService } from './tickets-service';
-import { notFoundError } from '@/errors';
 
 async function getHotels(userId: number) {
   try {
@@ -10,15 +9,15 @@ async function getHotels(userId: number) {
     const ticket = await ticketsService.getTicketByUserId(userId);
 
     if (!hotels || hotels.length === 0) {
-      throw notFoundError();
+      return httpStatus.NOT_FOUND;
     }
 
     if (!ticket || !hotels) {
-      throw notFoundError();
+      return httpStatus.NOT_FOUND;
     }
 
     if (ticket.status !== 'PAID' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-      return httpStatus.PAYMENT_REQUIRED; // Retorna o status 402 (Payment Required)
+      return httpStatus.PAYMENT_REQUIRED;
     }
 
     return hotels;
