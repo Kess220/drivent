@@ -1,6 +1,8 @@
 /* eslint-disable prettier/prettier */
+import httpStatus from 'http-status';
 import { getHotels as getHotelsRepository } from '../repositories/hotels-repository';
 import { ticketsService } from './tickets-service';
+import { notFoundError } from '@/errors';
 
 async function getHotels(userId: number) {
   try {
@@ -8,15 +10,15 @@ async function getHotels(userId: number) {
     const ticket = await ticketsService.getTicketByUserId(userId);
 
     if (!hotels || hotels.length === 0) {
-      throw new Error('Nenhum hotel encontrado.');
+      throw notFoundError();
     }
 
-    if (!ticket) {
-      throw new Error('Nenhum ticket encontrado para este usuário.');
+    if (!ticket || !hotels) {
+      throw notFoundError();
     }
 
     if (ticket.status !== 'PAID' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-      throw new Error('Ticket não foi pago, é remoto ou não inclui hotel.');
+      return httpStatus.PAYMENT_REQUIRED; // Retorna o status 402 (Payment Required)
     }
 
     return hotels;
