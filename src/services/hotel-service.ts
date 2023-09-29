@@ -12,9 +12,9 @@ async function getHotels(userId: number) {
       return httpStatus.NOT_FOUND;
     }
 
-    // if (!ticket) {
-    //   return httpStatus.NOT_FOUND;
-    // }
+    if (ticket.TicketType.isRemote && !ticket.TicketType.includesHotel) {
+      return httpStatus.PAYMENT_REQUIRED;
+    }
 
     if (ticket.status !== 'PAID' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
       return httpStatus.PAYMENT_REQUIRED;

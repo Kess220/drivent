@@ -3,7 +3,14 @@ import supertest from 'supertest';
 import * as jwt from 'jsonwebtoken';
 import httpStatus from 'http-status';
 import { TicketStatus } from '@prisma/client';
-import { createEnrollmentWithAddress, createTicketType, createUser, createTicket, createHotel } from '../factories';
+import {
+  createEnrollmentWithAddress,
+  createTicketType,
+  createUser,
+  createTicket,
+  createHotel,
+  createTicketTypeIsRemoteIsNotHotel,
+} from '../factories';
 import { cleanDb, generateValidToken } from '../helpers';
 import app, { init } from '@/app';
 
@@ -65,7 +72,7 @@ describe('Teste da rota GET /hotels', () => {
     // console.log('Hotéis disponíveis:', response.body);
   });
 
-  it('Deve retornar 402 caso não tenha pago o ticket ', async () => {
+  it('Deve retornar status 404 se o ticket for remoto e não incluir hotel ', async () => {
     // Crie um usuário no banco de dados
     const user = await createUser();
 
@@ -78,11 +85,13 @@ describe('Teste da rota GET /hotels', () => {
     // Crie uma inscrição (enrollment) para o usuário
     const enrollment = await createEnrollmentWithAddress(user);
 
+    // Crie um tipo de ticket remoto que não inclui hotel
+
     // Crie um tipo de ticket com hotéis disponíveis
-    const ticketType = await createTicketType();
+    const ticketType = await createTicketTypeIsRemoteIsNotHotel();
 
     // Crie um ticket pago para a inscrição e o tipo de ticket
-    await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+    await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
     // Faça uma solicitação à rota /hotels com o token válido
     const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
