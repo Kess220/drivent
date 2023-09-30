@@ -55,15 +55,6 @@ describe('Teste da rota GET /hotels', () => {
     // Crie um hotel no banco de dados
     // await createHotel();
 
-    // Crie uma inscrição (enrollment) para o usuário
-    const enrollment = await createEnrollmentWithAddress(user);
-
-    // Crie um tipo de ticket com hotéis disponíveis
-    const ticketType = await createTicketType();
-
-    // Crie um ticket pago para a inscrição e o tipo de ticket
-    await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
-
     // Faça uma solicitação à rota /hotels com o token válido
     const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
@@ -102,6 +93,25 @@ describe('Teste da rota GET /hotels', () => {
 
     // console.log('Hotéis disponíveis:', response.body);
   });
+});
+
+describe('Teste da rota GET /hotels', () => {
+  it('Retorna 404 caso não tenha enrollment', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createHotel();
+    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.NOT_FOUND);
+  });
+
+  it('Retorna 404 se não houver ticket', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createHotel();
+    await createEnrollmentWithAddress(user);
+    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.NOT_FOUND);
+  });
 
   it('Deve retornar status 402 se o ticket não incluir hotel ', async () => {
     // Crie um usuário no banco de dados
@@ -131,24 +141,5 @@ describe('Teste da rota GET /hotels', () => {
     expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
 
     // console.log('Hotéis disponíveis:', response.body);
-  });
-});
-
-describe('Teste da rota GET /hotels', () => {
-  it('Retorna 404 caso não tenha enrollment', async () => {
-    const user = await createUser();
-    const token = await generateValidToken(user);
-    await createHotel();
-    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(status).toBe(httpStatus.NOT_FOUND);
-  });
-
-  it('Retorna 404 se não houver ticket', async () => {
-    const user = await createUser();
-    const token = await generateValidToken(user);
-    await createHotel();
-    await createEnrollmentWithAddress(user);
-    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(status).toBe(httpStatus.NOT_FOUND);
   });
 });
