@@ -142,4 +142,13 @@ describe('Teste da rota GET /hotels', () => {
     const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
     expect(status).toBe(httpStatus.NOT_FOUND);
   });
+
+  it('Retorna 404 se não houver ticket', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createHotel();
+    await createEnrollmentWithAddress(user);
+    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.NOT_FOUND);
+  });
 });
