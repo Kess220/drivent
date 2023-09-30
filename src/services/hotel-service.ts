@@ -1,29 +1,31 @@
 /* eslint-disable prettier/prettier */
 import httpStatus from 'http-status';
-import { getHotels as getHotelsRepository } from '../repositories/hotels-repository';
-import { ticketsService } from './tickets-service';
+import { getHotelsRepository, enrollmentGetId, getTicketID } from '../repositories/hotels-repository';
 
 async function getHotels(userId: number) {
-  try {
-    const hotels = await getHotelsRepository();
-    const ticket = await ticketsService.getTicketByUserId(userId);
+  const enrollment = await enrollmentGetId(userId);
 
-    if (!hotels || hotels.length === 0 || !ticket) {
-      return httpStatus.NOT_FOUND;
-    }
-
-    if (ticket.TicketType.isRemote && !ticket.TicketType.includesHotel) {
-      return httpStatus.PAYMENT_REQUIRED;
-    }
-
-    if (ticket.status !== 'PAID' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-      return httpStatus.PAYMENT_REQUIRED;
-    }
-
-    return hotels;
-  } catch (error) {
-    throw new Error(`Erro ao buscar hotéis: ${error.message}`);
+  if (!enrollment) {
+    return httpStatus.NOT_FOUND;
   }
+
+  const ticket = await getTicketID(enrollment.id);
+
+  if (!ticket) {
+    return httpStatus.PAYMENT_REQUIRED;
+  }
+
+  if (ticket.status === 'RESERVED' || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    return httpStatus.PAYMENT_REQUIRED;
+  }
+
+  const hotels = await getHotelsRepository();
+
+  if (!hotels || hotels.length === 0) {
+    return httpStatus.NOT_FOUND;
+  }
+
+  return hotels;
 }
 
 export { getHotels };

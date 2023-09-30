@@ -133,3 +133,13 @@ describe('Teste da rota GET /hotels', () => {
     // console.log('Hotéis disponíveis:', response.body);
   });
 });
+
+describe('Teste da rota GET /hotels', () => {
+  it('Retorna 404 caso não tenha enrollment', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    await createHotel();
+    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.NOT_FOUND);
+  });
+});
