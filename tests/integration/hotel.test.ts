@@ -237,63 +237,48 @@ describe('Teste da rota GET /hotels/hotelId', () => {
       expect(status).toBe(httpStatus.NOT_FOUND);
     });
 
-    // it('Deve retornar status 402', async () => {
-    //   // Crie um usuário no banco de dados
-    //   const user = await createUser();
+    describe('Quando o ticket não inclui hotel', () => {
+      beforeEach(async () => {
+        await cleanDb(); // Limpe o banco de dados antes de cada teste
+      });
+      it('Deve retornar status 402', async () => {
+        // Crie um usuário no banco de dados
+        const user = await createUser();
 
-    //   // Gere um token de autenticação válido para o usuário
-    //   const token = await generateValidToken(user);
+        // Gere um token de autenticação válido para o usuário
+        const token = await generateValidToken(user);
 
-    //   // Crie um hotel no banco de dados
-    //   await createHotel();
+        // Crie um hotel no banco de dados
+        await createHotel();
 
-    //   // Crie uma inscrição (enrollment) para o usuário
-    //   const enrollment = await createEnrollmentWithAddress(user);
+        // Crie uma inscrição (enrollment) para o usuário
+        const enrollment = await createEnrollmentWithAddress(user);
 
-    //   // Crie um tipo de ticket remoto que não inclui hotel
+        // Crie um tipo de ticket remoto que não inclui hotel
 
-    //   const ticketType = await createTicketTypeSucess();
+        const ticketType = await createTicketTypeincluedesNotHotel();
 
-    //   // Crie um ticket pago para a inscrição e o tipo de ticket
-    //   await createTicket(enrollment.id, ticketType.id, TicketStatus.RESERVED);
+        // Crie um ticket pago para a inscrição e o tipo de ticket
+        await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
-    //   // Faça uma solicitação à rota /hotels com o token válido
-    //   const response = await server.get('/hotels/1').set('Authorization', `Bearer ${token}`);
+        // Faça uma solicitação à rota /hotels com o token válido
+        const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    //   // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
-    //   expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
-    // });
-  });
-
-  describe('Quando o ticket não inclui hotel', () => {
-    beforeEach(async () => {
-      await cleanDb(); // Limpe o banco de dados antes de cada teste
-    });
-    it('Deve retornar status 402', async () => {
-      // Crie um usuário no banco de dados
-      const user = await createUser();
-
-      // Gere um token de autenticação válido para o usuário
-      const token = await generateValidToken(user);
-
-      // Crie um hotel no banco de dados
-      await createHotel();
-
-      // Crie uma inscrição (enrollment) para o usuário
-      const enrollment = await createEnrollmentWithAddress(user);
-
-      // Crie um tipo de ticket remoto que não inclui hotel
-
-      const ticketType = await createTicketTypeincluedesNotHotel();
-
-      // Crie um ticket pago para a inscrição e o tipo de ticket
-      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
-
-      // Faça uma solicitação à rota /hotels com o token válido
-      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-
-      // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
-      expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+        // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
+        expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+      });
+      describe('Quando não há enrollment', () => {
+        beforeEach(async () => {
+          await cleanDb(); // Limpe o banco de dados antes de cada teste
+        });
+        it('Deve retornar status 404', async () => {
+          const user = await createUser();
+          const token = await generateValidToken(user);
+          await createHotel();
+          const { status } = await server.get('/hotels/1').set('Authorization', `Bearer ${token}`);
+          expect(status).toBe(httpStatus.NOT_FOUND);
+        });
+      });
     });
   });
 });

@@ -45,6 +45,10 @@ async function getHotelWithRoomsById(userId: number, hotelId: number) {
 
   const enrollment = await enrollmentGetId(userId);
 
+  if (!enrollment) {
+    return httpStatus.NOT_FOUND;
+  }
+
   const ticket = await getTicketID(enrollment.id);
 
   if (!ticket) {
