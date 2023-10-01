@@ -16,130 +16,133 @@ import { cleanDb, generateValidToken } from '../helpers';
 import app, { init } from '@/app';
 
 const server = supertest(app);
+
 beforeAll(async () => {
   await init();
 });
+
 beforeEach(async () => {
   await cleanDb();
 });
 
 describe('Teste da rota GET /hotels', () => {
-  it('Deve retornar status 401 se não houver token de autenticação', async () => {
-    const response = await server.get('/hotels');
-
-    // Verifique se o status da resposta é 401 (não autorizado)
-    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  describe('Quando não há token de autenticação', () => {
+    it('Deve retornar status 401', async () => {
+      const response = await server.get('/hotels');
+      expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+    });
   });
 
-  it('Deve responder com status 401 se não houver sessão para o token fornecido', async () => {
-    // Crie um usuário sem sessão no banco de dados
-    const userWithoutSession = await createUser();
+  describe('Quando o token é inválido ou não possui sessão', () => {
+    it('Deve responder com status 401', async () => {
+      // Crie um usuário sem sessão no banco de dados
+      const userWithoutSession = await createUser();
 
-    // Gere um token com o ID do usuário (simulando um token inválido)
-    const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
+      // Gere um token com o ID do usuário (simulando um token inválido)
+      const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
 
-    // Faça uma solicitação à rota /hotels com o token inválido
-    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+      // Faça uma solicitação à rota /hotels com o token inválido
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    // Verifique se a resposta possui status 401 (não autorizado)
-    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+      // Verifique se a resposta possui status 401 (não autorizado)
+      expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+    });
   });
 
-  it('Deve retornar 404 caso não tenha hotels', async () => {
-    // Crie um usuário no banco de dados
-    const user = await createUser();
+  describe('Quando não há hotéis disponíveis', () => {
+    it('Deve retornar status 404', async () => {
+      // Crie um usuário no banco de dados
+      const user = await createUser();
 
-    // Gere um token de autenticação válido para o usuário
-    const token = await generateValidToken(user);
+      // Gere um token de autenticação válido para o usuário
+      const token = await generateValidToken(user);
 
-    // Crie um hotel no banco de dados
-    // await createHotel();
+      // Faça uma solicitação à rota /hotels com o token válido
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    // Faça uma solicitação à rota /hotels com o token válido
-    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-
-    // Verifique se a resposta possui status 404(NOT_FOUND)
-    expect(response.status).toBe(httpStatus.NOT_FOUND);
-
-    // console.log('Hotéis disponíveis:', response.body);
+      // Verifique se a resposta possui status 404 (NOT_FOUND)
+      expect(response.status).toBe(httpStatus.NOT_FOUND);
+    });
   });
 
-  it('Deve retornar status 402 se o ticket for remoto ', async () => {
-    // Crie um usuário no banco de dados
-    const user = await createUser();
+  describe('Quando o ticket é remoto e não inclui hotel', () => {
+    it('Deve retornar status 402', async () => {
+      // Crie um usuário no banco de dados
+      const user = await createUser();
 
-    // Gere um token de autenticação válido para o usuário
-    const token = await generateValidToken(user);
+      // Gere um token de autenticação válido para o usuário
+      const token = await generateValidToken(user);
 
-    // Crie um hotel no banco de dados
-    await createHotel();
+      // Crie um hotel no banco de dados
+      await createHotel();
 
-    // Crie uma inscrição (enrollment) para o usuário
-    const enrollment = await createEnrollmentWithAddress(user);
+      // Crie uma inscrição (enrollment) para o usuário
+      const enrollment = await createEnrollmentWithAddress(user);
 
-    // Crie um tipo de ticket remoto que não inclui hotel
+      // Crie um tipo de ticket remoto que não inclui hotel
 
-    // Crie um tipo de ticket com hotéis disponíveis
-    const ticketType = await createTicketTypeIsRemote();
+      // Crie um tipo de ticket com hotéis disponíveis
+      const ticketType = await createTicketTypeIsRemote();
 
-    // Crie um ticket pago para a inscrição e o tipo de ticket
-    await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+      // Crie um ticket pago para a inscrição e o tipo de ticket
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
-    // Faça uma solicitação à rota /hotels com o token válido
-    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+      // Faça uma solicitação à rota /hotels com o token válido
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    // Verifique se a resposta possui status 402(PAYMENT_REQUIRED)
-    expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
-
-    // console.log('Hotéis disponíveis:', response.body);
-  });
-});
-
-describe('Teste da rota GET /hotels', () => {
-  it('Retorna 404 caso não tenha enrollment', async () => {
-    const user = await createUser();
-    const token = await generateValidToken(user);
-    await createHotel();
-    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(status).toBe(httpStatus.NOT_FOUND);
+      // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
+      expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+    });
   });
 
-  it('Retorna 404 se não houver ticket', async () => {
-    const user = await createUser();
-    const token = await generateValidToken(user);
-    await createHotel();
-    await createEnrollmentWithAddress(user);
-    const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
-    expect(status).toBe(httpStatus.NOT_FOUND);
+  describe('Quando não há enrollment', () => {
+    it('Deve retornar status 404', async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      await createHotel();
+      const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+      expect(status).toBe(httpStatus.NOT_FOUND);
+    });
   });
 
-  it('Deve retornar status 402 se o ticket não incluir hotel ', async () => {
-    // Crie um usuário no banco de dados
-    const user = await createUser();
+  describe('Quando não há ticket', () => {
+    it('Deve retornar status 404', async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      await createHotel();
+      await createEnrollmentWithAddress(user);
+      const { status } = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+      expect(status).toBe(httpStatus.NOT_FOUND);
+    });
+  });
 
-    // Gere um token de autenticação válido para o usuário
-    const token = await generateValidToken(user);
+  describe('Quando o ticket não inclui hotel', () => {
+    it('Deve retornar status 402', async () => {
+      // Crie um usuário no banco de dados
+      const user = await createUser();
 
-    // Crie um hotel no banco de dados
-    await createHotel();
+      // Gere um token de autenticação válido para o usuário
+      const token = await generateValidToken(user);
 
-    // Crie uma inscrição (enrollment) para o usuário
-    const enrollment = await createEnrollmentWithAddress(user);
+      // Crie um hotel no banco de dados
+      await createHotel();
 
-    // Crie um tipo de ticket remoto que não inclui hotel
+      // Crie uma inscrição (enrollment) para o usuário
+      const enrollment = await createEnrollmentWithAddress(user);
 
-    // Crie um tipo de ticket com hotéis disponíveis
-    const ticketType = await createTicketTypeincluedesHotel();
+      // Crie um tipo de ticket remoto que não inclui hotel
 
-    // Crie um ticket pago para a inscrição e o tipo de ticket
-    await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+      // Crie um tipo de ticket com hotéis disponíveis
+      const ticketType = await createTicketTypeincluedesHotel();
 
-    // Faça uma solicitação à rota /hotels com o token válido
-    const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+      // Crie um ticket pago para a inscrição e o tipo de ticket
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
 
-    // Verifique se a resposta possui status 402(PAYMENT_REQUIRED)
-    expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+      // Faça uma solicitação à rota /hotels com o token válido
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
 
-    // console.log('Hotéis disponíveis:', response.body);
+      // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
+      expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+    });
   });
 });
