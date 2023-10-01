@@ -12,7 +12,7 @@ export async function createTicketType() {
     },
   });
 }
-
+//Cria ticket com isRemote true
 export async function createTicketTypeIsRemote() {
   return prisma.ticketType.create({
     data: {
