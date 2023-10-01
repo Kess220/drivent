@@ -178,5 +178,22 @@ describe('Teste da rota GET /hotels', () => {
       // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
       expect(response.status).toBe(httpStatus.OK);
     });
+
+    it('Should respond with 200 (OK) if everything is ok', async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const hotel = await createHotel();
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeSucess();
+      await createTicket(enrollment.id, ticketType.id, 'PAID');
+      const { status, body } = await server.get(`/hotels/${hotel.id}`).set('Authorization', `Bearer ${token}`);
+      expect(status).toBe(httpStatus.OK);
+      expect(body).toEqual({
+        ...hotel,
+        createdAt: hotel.createdAt.toISOString(),
+        updatedAt: hotel.updatedAt.toISOString(),
+        Rooms: [],
+      });
+    });
   });
 });

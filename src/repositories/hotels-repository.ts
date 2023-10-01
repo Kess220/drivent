@@ -17,8 +17,14 @@ async function getTicketID(enrollmentId: number) {
 
 async function enrollmentGetId(userId: number) {
   return await prisma.enrollment.findUnique({
-    where: { userId },
+    where: {
+      userId,
+    },
   });
 }
 
-export { getHotelsRepository, getTicketID, enrollmentGetId };
+async function getHotelRoomRepository(hotelId: number) {
+  return await prisma.hotel.findUnique({ where: { id: hotelId }, include: { Rooms: true } });
+}
+
+export { getHotelsRepository, getTicketID, enrollmentGetId, getHotelRoomRepository };

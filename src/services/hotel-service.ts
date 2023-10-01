@@ -1,6 +1,11 @@
 /* eslint-disable prettier/prettier */
 import httpStatus from 'http-status';
-import { getHotelsRepository, enrollmentGetId, getTicketID } from '../repositories/hotels-repository';
+import {
+  getHotelsRepository,
+  enrollmentGetId,
+  getTicketID,
+  getHotelRoomRepository,
+} from '../repositories/hotels-repository';
 
 async function getHotels(userId: number) {
   const hotels = await getHotelsRepository();
@@ -27,4 +32,18 @@ async function getHotels(userId: number) {
   return hotels;
 }
 
-export { getHotels };
+async function getHotelWithRoomsById(userId: number, hotelId: number) {
+  // // Verifique se o hotel existe usando a função do repositório
+  // await getHotels(userId);
+
+  const hotel = await getHotelRoomRepository(hotelId);
+
+  // Verifique se o hotel existe e pertence ao usuário (se necessário)
+  if (!hotel) {
+    return httpStatus.NOT_FOUND;
+  }
+
+  return hotel;
+}
+
+export { getHotels, getHotelWithRoomsById };
