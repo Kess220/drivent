@@ -16,7 +16,7 @@ async function getHotels(userId: number) {
     return httpStatus.NOT_FOUND;
   }
 
-  if (ticket.TicketType.isRemote || ticket.TicketType.includesHotel || ticket.status === 'RESERVED') {
+  if (ticket.TicketType.isRemote || !ticket.TicketType.includesHotel || ticket.status === 'RESERVED') {
     return httpStatus.PAYMENT_REQUIRED;
   }
 

@@ -10,6 +10,7 @@ import {
   createHotel,
   createTicketTypeIsRemote,
   createTicketTypeincluedesNotHotel,
+  createTicketTypeSucess,
 } from '../factories';
 import { cleanDb, generateValidToken } from '../helpers';
 import app, { init } from '@/app';
@@ -80,7 +81,6 @@ describe('Teste da rota GET /hotels', () => {
 
       // Crie um tipo de ticket remoto que não inclui hotel
 
-      // Crie um tipo de ticket com hotéis disponíveis
       const ticketType = await createTicketTypeIsRemote();
 
       // Crie um ticket pago para a inscrição e o tipo de ticket
@@ -140,7 +140,6 @@ describe('Teste da rota GET /hotels', () => {
 
       // Crie um tipo de ticket remoto que não inclui hotel
 
-      // Crie um tipo de ticket com hotéis disponíveis
       const ticketType = await createTicketTypeincluedesNotHotel();
 
       // Crie um ticket pago para a inscrição e o tipo de ticket
@@ -151,6 +150,33 @@ describe('Teste da rota GET /hotels', () => {
 
       // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
       expect(response.status).toBe(httpStatus.PAYMENT_REQUIRED);
+    });
+  });
+
+  describe('Retorna os hoteis no sucesso', () => {
+    beforeEach(async () => {
+      await cleanDb(); // Limpe o banco de dados antes de cada teste
+    });
+    it('Deve retornar status 200', async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      await createHotel();
+
+      // Crie uma inscrição (enrollment) para o usuário
+      const enrollment = await createEnrollmentWithAddress(user);
+
+      // Crie um tipo de ticket remoto que não inclui hotel
+
+      const ticketType = await createTicketTypeSucess();
+
+      // Crie um ticket pago para a inscrição e o tipo de ticket
+      await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
+
+      // Faça uma solicitação à rota /hotels com o token válido
+      const response = await server.get('/hotels').set('Authorization', `Bearer ${token}`);
+
+      // Verifique se a resposta possui status 402 (PAYMENT_REQUIRED)
+      expect(response.status).toBe(httpStatus.OK);
     });
   });
 });
