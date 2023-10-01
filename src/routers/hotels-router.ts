@@ -5,6 +5,6 @@ import { authenticateToken } from '@/middlewares';
 
 const hotelsRouter = Router();
 
-hotelsRouter.get('/', authenticateToken, listHotels).get('/:hotelId', getHotelsById);
+hotelsRouter.get('/', authenticateToken, listHotels).get('/:hotelId', authenticateToken, getHotelsById);
 
 export { hotelsRouter };

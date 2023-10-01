@@ -43,6 +43,18 @@ async function getHotelWithRoomsById(userId: number, hotelId: number) {
     return httpStatus.NOT_FOUND;
   }
 
+  const enrollment = await enrollmentGetId(userId);
+
+  const ticket = await getTicketID(enrollment.id);
+
+  if (!ticket) {
+    return httpStatus.NOT_FOUND;
+  }
+
+  if (ticket.TicketType.isRemote || !ticket.TicketType.includesHotel || ticket.status === 'RESERVED') {
+    return httpStatus.PAYMENT_REQUIRED;
+  }
+
   return hotel;
 }
 
