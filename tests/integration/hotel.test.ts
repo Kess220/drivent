@@ -5,12 +5,11 @@ import httpStatus from 'http-status';
 import { TicketStatus } from '@prisma/client';
 import {
   createEnrollmentWithAddress,
-  createTicketType,
   createUser,
   createTicket,
   createHotel,
   createTicketTypeIsRemote,
-  createTicketTypeincluedesHotel,
+  createTicketTypeincluedesNotHotel,
 } from '../factories';
 import { cleanDb, generateValidToken } from '../helpers';
 import app, { init } from '@/app';
@@ -96,6 +95,9 @@ describe('Teste da rota GET /hotels', () => {
   });
 
   describe('Quando não há enrollment', () => {
+    beforeEach(async () => {
+      await cleanDb(); // Limpe o banco de dados antes de cada teste
+    });
     it('Deve retornar status 404', async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
@@ -106,6 +108,9 @@ describe('Teste da rota GET /hotels', () => {
   });
 
   describe('Quando não há ticket', () => {
+    beforeEach(async () => {
+      await cleanDb(); // Limpe o banco de dados antes de cada teste
+    });
     it('Deve retornar status 404', async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
@@ -117,6 +122,9 @@ describe('Teste da rota GET /hotels', () => {
   });
 
   describe('Quando o ticket não inclui hotel', () => {
+    beforeEach(async () => {
+      await cleanDb(); // Limpe o banco de dados antes de cada teste
+    });
     it('Deve retornar status 402', async () => {
       // Crie um usuário no banco de dados
       const user = await createUser();
@@ -133,7 +141,7 @@ describe('Teste da rota GET /hotels', () => {
       // Crie um tipo de ticket remoto que não inclui hotel
 
       // Crie um tipo de ticket com hotéis disponíveis
-      const ticketType = await createTicketTypeincluedesHotel();
+      const ticketType = await createTicketTypeincluedesNotHotel();
 
       // Crie um ticket pago para a inscrição e o tipo de ticket
       await createTicket(enrollment.id, ticketType.id, TicketStatus.PAID);
