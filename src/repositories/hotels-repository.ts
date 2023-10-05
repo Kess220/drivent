@@ -1,30 +1,21 @@
-/* eslint-disable prettier/prettier */
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/config';
 
-const prisma = new PrismaClient();
-
-async function getHotelsRepository() {
-  const hotels = await prisma.hotel.findMany();
-  return hotels;
+async function findHotels() {
+  return prisma.hotel.findMany();
 }
 
-async function getTicketID(enrollmentId: number) {
-  return await prisma.ticket.findUnique({
-    where: { enrollmentId },
-    include: { TicketType: true },
-  });
-}
-
-async function enrollmentGetId(userId: number) {
-  return await prisma.enrollment.findUnique({
+async function findRoomsByHotelId(hotelId: number) {
+  return prisma.hotel.findFirst({
     where: {
-      userId,
+      id: hotelId,
+    },
+    include: {
+      Rooms: true,
     },
   });
 }
 
-async function getHotelRoomRepository(hotelId: number) {
-  return await prisma.hotel.findUnique({ where: { id: hotelId }, include: { Rooms: true } });
-}
-
-export { getHotelsRepository, getTicketID, enrollmentGetId, getHotelRoomRepository };
+export const hotelRepository = {
+  findHotels,
+  findRoomsByHotelId,
+};

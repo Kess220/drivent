@@ -1,10 +1,9 @@
-/* eslint-disable prettier/prettier */
 import { Router } from 'express';
-import { listHotels, getHotelsById } from '../controllers/hotel-controller';
 import { authenticateToken } from '@/middlewares';
+import { getHotels, getHotelsWithRooms } from '@/controllers';
 
 const hotelsRouter = Router();
 
-hotelsRouter.get('/', authenticateToken, listHotels).get('/:hotelId', authenticateToken, getHotelsById);
+hotelsRouter.all('/*', authenticateToken).get('/', getHotels).get('/:hotelId', getHotelsWithRooms);
 
 export { hotelsRouter };

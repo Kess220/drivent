@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -18,7 +18,7 @@ model User {
   updatedAt  DateTime     @updatedAt
   Session    Session[]
   Enrollment Enrollment[]
-  Booking    Booking[]
+  Booking    Booking?
 }
 
 model Session {
@@ -127,12 +127,12 @@ model Room {
   Booking   Booking[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-} 
+}
 
 model Booking {
   id        Int      @id @default(autoincrement())
   User      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int      @unique
   Room      Room     @relation(fields: [roomId], references: [id])
   roomId    Int
   createdAt DateTime @default(now())
