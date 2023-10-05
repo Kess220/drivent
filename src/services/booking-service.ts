@@ -1,13 +1,14 @@
 /* eslint-disable prettier/prettier */
-import { createBookingRepository, isRoomFull } from '@/repositories/booking-repository';
+import bookingRepository from '@/repositories/booking-repository';
+
 import { notFoundBookingError, forbiddenError } from '@/errors';
 
 export async function createBooking(userId: number, roomId: number) {
   // Verifique se o quarto está totalmente ocupado
-  const { room, reservationCount } = await isRoomFull(roomId);
+  const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
 
-  if (!room) {
-    throw notFoundBookingError();
+  if (!room || !room.id) {
+    throw notFoundBookingError('Room not exist!');
   }
 
   if (reservationCount >= room.capacity) {
@@ -15,10 +16,10 @@ export async function createBooking(userId: number, roomId: number) {
   }
 
   // Chame a função do repositório para criar a reserva
-  const bookingId = await createBookingRepository(userId, roomId);
+  const bookingId = await bookingRepository.createBookingRepository(userId, roomId);
 
   if (!bookingId) {
-    throw notFoundBookingError();
+    throw notFoundBookingError('Booking not found!');
   }
 
   return { bookingId };

@@ -6,9 +6,9 @@ export function notFoundError(): ApplicationError {
     message: 'No result for this search!',
   };
 }
-export function notFoundBookingError(): ApplicationError {
+export function notFoundBookingError(message: string): ApplicationError {
   return {
     name: 'NotFoundBookingError',
-    message: 'Room not found!',
+    message,
   };
 }

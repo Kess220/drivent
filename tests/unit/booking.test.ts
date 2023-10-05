@@ -1,22 +1,11 @@
 /* eslint-disable prettier/prettier */
-// Importe as funções e objetos necessários para o teste
-import { prisma } from '@/config';
-import { createBookingRepository, isRoomFull } from '@/repositories/booking-repository';
-import { createBooking } from '@/services/booking-service';
+import { bookingService } from '@/services/booking-service';
+import bookingRepository from '@/repositories/booking-repository';
 
-jest.mock('@/config', () => ({
-  prisma: {
-    booking: {
-      create: jest.fn(),
-      count: jest.fn(),
-    },
-    room: {
-      findUnique: jest.fn(),
-    },
-  },
-}));
+// Mock do bookingRepository
+jest.mock('@/repositories/booking-repository');
 
-describe('Booking Repository Tests', () => {
+describe('Booking Service Tests', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -25,91 +14,77 @@ describe('Booking Repository Tests', () => {
     const userId = 1;
     const roomId = 1;
 
-    // Simule o retorno da função create do prisma.booking
-    (prisma.booking.create as jest.Mock).mockResolvedValue({ id: 1 });
-
-    const bookingId = await createBookingRepository(userId, roomId);
-
-    // Verifique se a função create do prisma.booking foi chamada corretamente
-    expect(prisma.booking.create).toHaveBeenCalledWith({
-      data: {
-        userId,
-        roomId,
+    // Crie um objeto simulado que corresponda à estrutura de retorno de isRoomFull
+    const mockIsRoomFullResult = {
+      room: {
+        id: 1,
+        name: 'Nome do Quarto',
+        hotelId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        capacity: 2,
       },
-    });
+      reservationCount: 1,
+    };
 
-    expect(bookingId).toBe(1);
+    // Use spyOn para substituir a implementação de isRoomFull
+    jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+
+    // Mock da função createBookingRepository no bookingRepository
+    jest.spyOn(bookingRepository, 'createBookingRepository').mockResolvedValue(1); // Simule o ID do booking criado
+
+    const result = await bookingService.createBooking(userId, roomId);
+
+    // Verifique se a função isRoomFull foi chamada com os argumentos corretos
+    expect(bookingRepository.isRoomFull).toHaveBeenCalledWith(roomId);
+
+    // Verifique se a função createBookingRepository foi chamada com os argumentos corretos
+    expect(bookingRepository.createBookingRepository).toHaveBeenCalledWith(userId, roomId);
+
+    // Verifique se o resultado é o esperado
+    expect(result).toEqual({ bookingId: 1 });
   });
 
-  it('should check if the room is full', async () => {
-    const roomId = 1;
+  describe('POST /booking', () => {
+    it('Should throw a notFoundBookingError when room doesnt exist', async () => {
+      const userId = 1;
+      const roomId = 9999; // Um número que provavelmente não corresponde a nenhum quarto existente
 
-    // Simule a contagem de reservas
-    (prisma.booking.count as jest.Mock).mockResolvedValue(2);
+      // Simule a função isRoomFull retornando um quarto nulo, indicando que o quarto não existe
+      jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue({
+        room: null,
+        reservationCount: 0,
+      });
 
-    // Simule as informações do quarto
-    (prisma.room.findUnique as jest.Mock).mockResolvedValue({ capacity: 2 });
-
-    const result = await isRoomFull(roomId);
-
-    // Verifique se a função count do prisma.booking foi chamada corretamente
-    expect(prisma.booking.count).toHaveBeenCalledWith({
-      where: {
-        roomId,
-      },
+      // Chame a função createBooking e verifique se ela lança a exceção esperada
+      await expect(bookingService.createBooking(userId, roomId)).rejects.toEqual({
+        name: 'NotFoundBookingError',
+        message: 'Room not exist!',
+      });
     });
-
-    // Verifique se a função findUnique do prisma.room foi chamada corretamente
-    expect(prisma.room.findUnique).toHaveBeenCalledWith({
-      where: {
-        id: roomId,
-      },
-    });
-
-    expect(result).toEqual({ room: { capacity: 2 }, reservationCount: 2 });
   });
 
-  it('should throw an error when room does not exist', async () => {
+  it('should throw forbiddenError when room is fully occupied', async () => {
     const userId = 1;
-    const roomId = 1;
+    const roomId = 123; // Simule um quarto
 
-    // Simule que o quarto não existe (retorna null)
-    (prisma.room.findUnique as jest.Mock).mockResolvedValue(null);
-
-    // Chame a função de serviço e verifique se ela lança um erro
-    try {
-      await createBooking(userId, roomId);
-    } catch (error) {
-      expect(error.message).toBe('Room not found!');
-    }
-  });
-});
-
-describe('isRoomFull', () => {
-  it('deve verificar se o quarto está cheio corretamente', async () => {
-    const roomId = 2;
-    const reservationCount = 3; // O número simulado de reservas
-    const roomData = { id: roomId, name: 'Quarto 2' }; // Dados simulados do quarto
-
-    // Configura o comportamento simulado do prisma.booking.count
-    (prisma.booking.count as jest.Mock).mockResolvedValue(reservationCount);
-
-    // Configura o comportamento simulado do prisma.room.findUnique
-    (prisma.room.findUnique as jest.Mock).mockResolvedValue(roomData);
-
-    const result = await isRoomFull(roomId);
-
-    expect(result.room).toEqual(roomData);
-    expect(result.reservationCount).toBe(reservationCount);
-    expect(prisma.booking.count).toHaveBeenCalledWith({
-      where: {
-        roomId,
-      },
-    });
-    expect(prisma.room.findUnique).toHaveBeenCalledWith({
-      where: {
+    // Simule um quarto totalmente ocupado
+    const mockIsRoomFullResult = {
+      room: {
         id: roomId,
+        capacity: 2,
       },
+      reservationCount: 2,
+    };
+
+    // Use spyOn para substituir a implementação de isRoomFull
+    jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+
+    // Chame a função createBooking e verifique se ela lança a exceção forbiddenError
+    const result = bookingService.createBooking(userId, roomId);
+    expect(result).rejects.toEqual({
+      name: 'ForbiddenError',
+      message: 'Quarto está totalmente ocupado',
     });
   });
 });

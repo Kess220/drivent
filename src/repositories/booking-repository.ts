@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { prisma } from '@/config';
 
-export async function createBookingRepository(userId: number, roomId: number) {
+async function createBookingRepository(userId: number, roomId: number) {
   const booking = await prisma.booking.create({
     data: {
       userId,
@@ -25,5 +25,10 @@ export async function isRoomFull(roomId: number) {
     },
   });
 
-  return { room, reservationCount };
+  return {
+    room: room as { id: number; capacity: number }, // Use null se o quarto não existir
+    reservationCount,
+  };
 }
+
+export default { createBookingRepository, isRoomFull };
