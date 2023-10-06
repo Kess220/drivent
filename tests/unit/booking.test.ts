@@ -1,6 +1,8 @@
 /* eslint-disable prettier/prettier */
+import { TicketStatus } from '@prisma/client';
 import { bookingService } from '@/services/booking-service';
-import bookingRepository from '@/repositories/booking-repository';
+import { bookingRepository } from '@/repositories/booking-repository';
+import { enrollmentRepository, ticketsRepository } from '@/repositories';
 
 // Mock do bookingRepository
 jest.mock('@/repositories/booking-repository');
@@ -26,9 +28,54 @@ describe('Booking Service Tests', () => {
       },
       reservationCount: 1,
     };
+    const mockTicketResult = {
+      id: 2,
+      ticketTypeId: 1,
+      enrollmentId: 1,
+      status: TicketStatus.PAID, // Defina o status como um valor válido de TicketStatus
+      createdAt: new Date('2023-10-06T16:31:42.258Z'),
+      updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+      TicketType: {
+        id: 1,
+        name: 'testenameType',
+        price: 100,
+        isRemote: false,
+        includesHotel: true,
+        createdAt: new Date('2023-10-06T13:31:30.412Z'),
+        updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+      },
+    };
+
+    const mockEnrollmentResult = {
+      id: 1,
+      name: 'Kaio',
+      cpf: '12345678909',
+      birthday: new Date('1990-05-15T00:00:00.000Z'),
+      phone: '(77)97777-7777',
+      userId: 1,
+      createdAt: new Date('2023-10-06T16:19:18.570Z'),
+      updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+      Address: [
+        {
+          id: 1,
+          cep: '63950-000',
+          street: 'Rua Principal',
+          city: 'Choró',
+          state: 'CE',
+          number: '123',
+          neighborhood: 'Centro',
+          addressDetail: 'fim do mundo',
+          enrollmentId: 1,
+          createdAt: new Date('2023-10-06T16:19:18.577Z'),
+          updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+        },
+      ],
+    };
 
     // Use spyOn para substituir a implementação de isRoomFull
     jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
 
     // Mock da função createBookingRepository no bookingRepository
     jest.spyOn(bookingRepository, 'createBookingRepository').mockResolvedValue(1); // Simule o ID do booking criado
@@ -50,12 +97,56 @@ describe('Booking Service Tests', () => {
       const userId = 1;
       const roomId = 9999; // Um número que provavelmente não corresponde a nenhum quarto existente
 
+      const mockTicketResult = {
+        id: 2,
+        ticketTypeId: 1,
+        enrollmentId: 1,
+        status: TicketStatus.PAID, // Defina o status como um valor válido de TicketStatus
+        createdAt: new Date('2023-10-06T16:31:42.258Z'),
+        updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+        TicketType: {
+          id: 1,
+          name: 'testenameType',
+          price: 100,
+          isRemote: false,
+          includesHotel: true,
+          createdAt: new Date('2023-10-06T13:31:30.412Z'),
+          updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+        },
+      };
+
+      const mockEnrollmentResult = {
+        id: 1,
+        name: 'Kaio',
+        cpf: '12345678909',
+        birthday: new Date('1990-05-15T00:00:00.000Z'),
+        phone: '(77)97777-7777',
+        userId: 1,
+        createdAt: new Date('2023-10-06T16:19:18.570Z'),
+        updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+        Address: [
+          {
+            id: 1,
+            cep: '63950-000',
+            street: 'Rua Principal',
+            city: 'Choró',
+            state: 'CE',
+            number: '123',
+            neighborhood: 'Centro',
+            addressDetail: 'fim do mundo',
+            enrollmentId: 1,
+            createdAt: new Date('2023-10-06T16:19:18.577Z'),
+            updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+          },
+        ],
+      };
       // Simule a função isRoomFull retornando um quarto nulo, indicando que o quarto não existe
       jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue({
         room: null,
         reservationCount: 0,
       });
-
+      jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+      jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
       // Chame a função createBooking e verifique se ela lança a exceção esperada
       await expect(bookingService.createBooking(userId, roomId)).rejects.toEqual({
         name: 'NotFoundBookingError',
@@ -77,8 +168,54 @@ describe('Booking Service Tests', () => {
       reservationCount: 2,
     };
 
+    const mockTicketResult = {
+      id: 2,
+      ticketTypeId: 1,
+      enrollmentId: 1,
+      status: TicketStatus.PAID, // Defina o status como um valor válido de TicketStatus
+      createdAt: new Date('2023-10-06T16:31:42.258Z'),
+      updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+      TicketType: {
+        id: 1,
+        name: 'testenameType',
+        price: 100,
+        isRemote: false,
+        includesHotel: true,
+        createdAt: new Date('2023-10-06T13:31:30.412Z'),
+        updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+      },
+    };
+
+    const mockEnrollmentResult = {
+      id: 1,
+      name: 'Kaio',
+      cpf: '12345678909',
+      birthday: new Date('1990-05-15T00:00:00.000Z'),
+      phone: '(77)97777-7777',
+      userId: 1,
+      createdAt: new Date('2023-10-06T16:19:18.570Z'),
+      updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+      Address: [
+        {
+          id: 1,
+          cep: '63950-000',
+          street: 'Rua Principal',
+          city: 'Choró',
+          state: 'CE',
+          number: '123',
+          neighborhood: 'Centro',
+          addressDetail: 'fim do mundo',
+          enrollmentId: 1,
+          createdAt: new Date('2023-10-06T16:19:18.577Z'),
+          updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+        },
+      ],
+    };
+
     // Use spyOn para substituir a implementação de isRoomFull
     jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+    jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+    jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
 
     // Chame a função createBooking e verifique se ela lança a exceção forbiddenError
     const result = bookingService.createBooking(userId, roomId);

@@ -10,3 +10,4 @@ export * from './duplicate-email-error';
 export * from './enrollment-not-found-error';
 export * from './invalid-cep-error';
 export * from './forbidden-error';
+export * from './cannot-list-hotels-error';

@@ -26,9 +26,9 @@ export async function isRoomFull(roomId: number) {
   });
 
   return {
-    room: room as { id: number; capacity: number }, // Use null se o quarto não existir
+    room: room as { id: number; capacity: number },
     reservationCount,
   };
 }
 
-export default { createBookingRepository, isRoomFull };
+export const bookingRepository = { createBookingRepository, isRoomFull };

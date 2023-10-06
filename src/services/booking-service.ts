@@ -1,13 +1,26 @@
 /* eslint-disable prettier/prettier */
-import bookingRepository from '@/repositories/booking-repository';
-
-import { notFoundBookingError, forbiddenError } from '@/errors';
+import { TicketStatus } from '@prisma/client';
+import { bookingRepository } from '@/repositories/booking-repository';
+import { notFoundBookingError, forbiddenError, cannotListHotelsError } from '@/errors';
+import { enrollmentRepository, ticketsRepository } from '@/repositories';
 
 export async function createBooking(userId: number, roomId: number) {
   // Verifique se o quarto está totalmente ocupado
   const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) throw notFoundBookingError('a');
 
-  if (!room || !room.id) {
+  const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
+  if (!ticket) throw notFoundBookingError('a');
+
+  const type = ticket.TicketType;
+
+  if (ticket.status === TicketStatus.RESERVED || type.isRemote || !type.includesHotel) {
+    throw cannotListHotelsError();
+  }
+
+  // Verifique se o quarto existe
+  if (!room) {
     throw notFoundBookingError('Room not exist!');
   }
 
@@ -19,7 +32,7 @@ export async function createBooking(userId: number, roomId: number) {
   const bookingId = await bookingRepository.createBookingRepository(userId, roomId);
 
   if (!bookingId) {
-    throw notFoundBookingError('Booking not found!');
+    throw notFoundBookingError('bookingId is not exist');
   }
 
   return { bookingId };
