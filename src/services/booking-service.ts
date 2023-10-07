@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { TicketStatus } from '@prisma/client';
 import { bookingRepository } from '@/repositories/booking-repository';
-import { notFoundBookingError, forbiddenError, cannotListHotelsError } from '@/errors';
+import { notFoundBookingError, forbiddenError } from '@/errors';
 import { enrollmentRepository, ticketsRepository } from '@/repositories';
 
 export async function createBooking(userId: number, roomId: number) {
@@ -15,6 +15,9 @@ export async function createBooking(userId: number, roomId: number) {
 
   const type = ticket.TicketType;
 
+  if (!room) {
+    throw notFoundBookingError('Room not exist!');
+  }
   if (!type.includesHotel) {
     throw forbiddenError('Ticket not incudes Hotel');
   }
@@ -24,11 +27,6 @@ export async function createBooking(userId: number, roomId: number) {
 
   if (ticket.status === TicketStatus.RESERVED) {
     throw forbiddenError('Ticket is not PAID');
-  }
-
-  // Verifique se o quarto existe
-  if (!room) {
-    throw notFoundBookingError('Room not exist!');
   }
 
   if (reservationCount >= room.capacity) {
