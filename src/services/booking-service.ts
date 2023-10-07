@@ -15,8 +15,15 @@ export async function createBooking(userId: number, roomId: number) {
 
   const type = ticket.TicketType;
 
-  if (ticket.status === TicketStatus.RESERVED || type.isRemote || !type.includesHotel) {
-    throw cannotListHotelsError();
+  if (!type.includesHotel) {
+    throw forbiddenError('Ticket not incudes Hotel');
+  }
+  if (type.isRemote) {
+    throw forbiddenError('Ticket is remote');
+  }
+
+  if (ticket.status === TicketStatus.RESERVED) {
+    throw forbiddenError('Ticket is not PAID');
   }
 
   // Verifique se o quarto existe

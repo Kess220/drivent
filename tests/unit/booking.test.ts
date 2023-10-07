@@ -8,11 +8,11 @@ import { enrollmentRepository, ticketsRepository } from '@/repositories';
 jest.mock('@/repositories/booking-repository');
 
 describe('Booking Service Tests', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks(); // Redefine as mocks antes de cada teste
   });
 
-  it('should create a booking successfully', async () => {
+  test('1 - should create a booking successfully', async () => {
     const userId = 1;
     const roomId = 1;
 
@@ -93,7 +93,7 @@ describe('Booking Service Tests', () => {
   });
 
   describe('POST /booking', () => {
-    it('Should throw a notFoundBookingError when room doesnt exist', async () => {
+    test('2 - Should throw a notFoundBookingError when room doesnt exist', async () => {
       const userId = 1;
       const roomId = 9999; // Um número que provavelmente não corresponde a nenhum quarto existente
 
@@ -153,26 +153,244 @@ describe('Booking Service Tests', () => {
         message: 'Room not exist!',
       });
     });
+
+    test('3 - should throw forbiddenError when room is fully occupied', async () => {
+      const userId = 1;
+      const roomId = 123; // Simule um quarto
+
+      // Simule um quarto totalmente ocupado
+      const mockIsRoomFullResult = {
+        room: {
+          id: roomId,
+          capacity: 2,
+        },
+        reservationCount: 2,
+      };
+
+      const mockTicketResult = {
+        id: 2,
+        ticketTypeId: 1,
+        enrollmentId: 1,
+        status: TicketStatus.PAID,
+        createdAt: new Date('2023-10-06T16:31:42.258Z'),
+        updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+        TicketType: {
+          id: 1,
+          name: 'testenameType',
+          price: 100,
+          isRemote: false,
+          includesHotel: true,
+          createdAt: new Date('2023-10-06T13:31:30.412Z'),
+          updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+        },
+      };
+
+      const mockEnrollmentResult = {
+        id: 1,
+        name: 'Kaio',
+        cpf: '12345678909',
+        birthday: new Date('1990-05-15T00:00:00.000Z'),
+        phone: '(77)97777-7777',
+        userId: 1,
+        createdAt: new Date('2023-10-06T16:19:18.570Z'),
+        updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+        Address: [
+          {
+            id: 1,
+            cep: '63950-000',
+            street: 'Rua Principal',
+            city: 'Choró',
+            state: 'CE',
+            number: '123',
+            neighborhood: 'Centro',
+            addressDetail: 'fim do mundo',
+            enrollmentId: 1,
+            createdAt: new Date('2023-10-06T16:19:18.577Z'),
+            updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+          },
+        ],
+      };
+
+      // Use spyOn para substituir a implementação de isRoomFull
+      jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+      jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+      jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
+
+      // Chame a função createBooking e verifique se ela lança a exceção forbiddenError
+      const result = bookingService.createBooking(userId, roomId);
+      expect(result).rejects.toEqual({
+        name: 'ForbiddenError',
+        message: 'Quarto está totalmente ocupado',
+      });
+    });
+
+    test('4 - should throw ForbiddenError when ticket is remote', async () => {
+      const userId = 1;
+      const roomId = 1;
+
+      // Crie um objeto simulado que corresponda à estrutura de retorno de isRoomFull
+      const mockIsRoomFullResult = {
+        room: {
+          id: 1,
+          name: 'Nome do Quarto',
+          hotelId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          capacity: 2,
+        },
+        reservationCount: 1,
+      };
+      const mockTicketResult = {
+        id: 2,
+        ticketTypeId: 1,
+        enrollmentId: 1,
+        status: TicketStatus.PAID,
+        createdAt: new Date('2023-10-06T16:31:42.258Z'),
+        updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+        TicketType: {
+          id: 1,
+          name: 'testenameType',
+          price: 100,
+          isRemote: true,
+          includesHotel: true,
+          createdAt: new Date('2023-10-06T13:31:30.412Z'),
+          updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+        },
+      };
+
+      const mockEnrollmentResult = {
+        id: 1,
+        name: 'Kaio',
+        cpf: '12345678909',
+        birthday: new Date('1990-05-15T00:00:00.000Z'),
+        phone: '(77)97777-7777',
+        userId: 1,
+        createdAt: new Date('2023-10-06T16:19:18.570Z'),
+        updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+        Address: [
+          {
+            id: 1,
+            cep: '63950-000',
+            street: 'Rua Principal',
+            city: 'Choró',
+            state: 'CE',
+            number: '123',
+            neighborhood: 'Centro',
+            addressDetail: 'fim do mundo',
+            enrollmentId: 1,
+            createdAt: new Date('2023-10-06T16:19:18.577Z'),
+            updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+          },
+        ],
+      };
+
+      // Use spyOn para substituir a implementação de isRoomFull
+      jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+      jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+      jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
+
+      // Chame a função createBooking e verifique se ela lança a exceção ForbiddenError
+      const result = bookingService.createBooking(userId, roomId);
+      await expect(result).rejects.toEqual({
+        name: 'ForbiddenError',
+        message: 'Ticket is remote',
+      });
+    });
+
+    test('5 - should return status 403 if user ticket does not include hotel', async () => {
+      const userId = 1;
+      const roomId = 1;
+
+      // Crie um objeto simulado que corresponda à estrutura de retorno de isRoomFull
+      const mockIsRoomFullResult = {
+        room: {
+          id: 1,
+          name: 'Nome do Quarto',
+          hotelId: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          capacity: 2,
+        },
+        reservationCount: 1,
+      };
+      const mockTicketResult = {
+        id: 2,
+        ticketTypeId: 1,
+        enrollmentId: 1,
+        status: TicketStatus.PAID,
+        createdAt: new Date('2023-10-06T16:31:42.258Z'),
+        updatedAt: new Date('2023-10-06T16:32:22.846Z'),
+        TicketType: {
+          id: 1,
+          name: 'testenameType',
+          price: 100,
+          isRemote: true,
+          includesHotel: false,
+          createdAt: new Date('2023-10-06T13:31:30.412Z'),
+          updatedAt: new Date('2023-10-06T13:31:30.412Z'),
+        },
+      };
+
+      const mockEnrollmentResult = {
+        id: 1,
+        name: 'Kaio',
+        cpf: '12345678909',
+        birthday: new Date('1990-05-15T00:00:00.000Z'),
+        phone: '(77)97777-7777',
+        userId: 1,
+        createdAt: new Date('2023-10-06T16:19:18.570Z'),
+        updatedAt: new Date('2023-10-06T16:19:18.571Z'),
+        Address: [
+          {
+            id: 1,
+            cep: '63950-000',
+            street: 'Rua Principal',
+            city: 'Choró',
+            state: 'CE',
+            number: '123',
+            neighborhood: 'Centro',
+            addressDetail: 'fim do mundo',
+            enrollmentId: 1,
+            createdAt: new Date('2023-10-06T16:19:18.577Z'),
+            updatedAt: new Date('2023-10-06T16:19:18.578Z'),
+          },
+        ],
+      };
+
+      // Use spyOn para substituir a implementação de isRoomFull
+      jest.spyOn(bookingRepository, 'isRoomFull').mockResolvedValue(mockIsRoomFullResult);
+      jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
+      jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
+
+      // Chame a função createBooking e verifique se ela retorna o status 403
+      const result = bookingService.createBooking(userId, roomId);
+      await expect(result).rejects.toEqual({
+        name: 'ForbiddenError',
+        message: 'Ticket not incudes Hotel',
+      });
+    });
   });
-
-  it('should throw forbiddenError when room is fully occupied', async () => {
+  test('6 - should return status 403 if user ticket is not paid', async () => {
     const userId = 1;
-    const roomId = 123; // Simule um quarto
+    const roomId = 1;
 
-    // Simule um quarto totalmente ocupado
+    // Crie um objeto simulado que corresponda à estrutura de retorno de isRoomFull
     const mockIsRoomFullResult = {
       room: {
-        id: roomId,
+        id: 1,
+        name: 'Nome do Quarto',
+        hotelId: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         capacity: 2,
       },
-      reservationCount: 2,
+      reservationCount: 1,
     };
-
     const mockTicketResult = {
       id: 2,
       ticketTypeId: 1,
       enrollmentId: 1,
-      status: TicketStatus.PAID, // Defina o status como um valor válido de TicketStatus
+      status: TicketStatus.RESERVED,
       createdAt: new Date('2023-10-06T16:31:42.258Z'),
       updatedAt: new Date('2023-10-06T16:32:22.846Z'),
       TicketType: {
@@ -217,11 +435,11 @@ describe('Booking Service Tests', () => {
     jest.spyOn(enrollmentRepository, 'findWithAddressByUserId').mockResolvedValue(mockEnrollmentResult);
     jest.spyOn(ticketsRepository, 'findTicketByEnrollmentId').mockResolvedValue(mockTicketResult);
 
-    // Chame a função createBooking e verifique se ela lança a exceção forbiddenError
+    // Chame a função createBooking e verifique se ela retorna o status 403
     const result = bookingService.createBooking(userId, roomId);
     expect(result).rejects.toEqual({
       name: 'ForbiddenError',
-      message: 'Quarto está totalmente ocupado',
+      message: 'Ticket is not PAID',
     });
   });
 });
