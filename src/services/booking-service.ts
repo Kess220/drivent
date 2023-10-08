@@ -44,14 +44,11 @@ async function createBooking(userId: number, roomId: number) {
 }
 
 async function getBookingByUser(userId: number) {
-  const roomInfo = await bookingRepository.getBookingByUserRepository(userId);
-  const bookingCount = roomInfo?._count?.Booking ?? 0;
-
-  if (bookingCount === 0) {
-    throw notFoundBookingError('User does not have a booking');
+  const booking = await bookingRepository.getBookingByUserRepository(userId);
+  if (!booking || !booking._count || booking._count.Booking === 0) {
+    throw notFoundBookingError('You dont have a booking yet');
   }
-
-  return bookingCount;
+  return booking;
 }
 
 export const bookingService = {
