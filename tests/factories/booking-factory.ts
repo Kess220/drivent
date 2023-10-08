@@ -15,7 +15,8 @@ async function createBookingData(userId: number, roomId: number) {
     },
   });
 }
-async function createRoom(capacity = 10) {
+const capacityNumber = 20;
+async function createRoom(capacity = capacityNumber) {
   const hotel = await prisma.hotel.create({
     data: {
       image: faker.internet.url(),
@@ -36,6 +37,21 @@ async function createRoom(capacity = 10) {
 }
 
 export async function createBookingTrue(userId: number, roomId: number) {
+  return await prisma.booking.create({
+    data: {
+      userId,
+      roomId,
+    },
+    select: {
+      id: true,
+      Room: true,
+      userId: true,
+      roomId: true,
+    },
+  });
+}
+
+async function createBooking(userId: number, roomId: number) {
   return await prisma.booking.create({
     data: {
       userId,
@@ -67,4 +83,4 @@ async function createRoomFull(capacity = 1) {
     },
   });
 }
-export { createBookingData, createRoom, createRoomFull };
+export { createBookingData, createRoom, createRoomFull, createBooking };

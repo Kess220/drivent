@@ -42,6 +42,9 @@ export type CardPaymentParams = {
   expirationDate: string;
   cvv: string;
 };
+export type InputBookingBody = {
+  roomId: number;
+};
 
 export type InputPaymentBody = {
   ticketId: number;

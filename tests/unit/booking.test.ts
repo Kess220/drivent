@@ -150,7 +150,7 @@ describe('Booking Service Tests', () => {
       // Chame a função createBooking e verifique se ela lança a exceção esperada
       await expect(bookingService.createBooking(userId, roomId)).rejects.toEqual({
         name: 'NotFoundBookingError',
-        message: 'Room not exist!',
+        message: 'Room does not exist!',
       });
     });
 
@@ -366,7 +366,7 @@ describe('Booking Service Tests', () => {
       const result = bookingService.createBooking(userId, roomId);
       await expect(result).rejects.toEqual({
         name: 'ForbiddenError',
-        message: 'Ticket not incudes Hotel',
+        message: 'Ticket does not include Hotel',
       });
     });
   });

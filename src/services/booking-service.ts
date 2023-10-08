@@ -16,10 +16,10 @@ async function createBooking(userId: number, roomId: number) {
   const type = ticket.TicketType;
 
   if (!room) {
-    throw notFoundBookingError('Room not exist!');
+    throw notFoundBookingError('Room does not exist!');
   }
   if (!type.includesHotel) {
-    throw forbiddenError('Ticket not incudes Hotel');
+    throw forbiddenError('Ticket does not include Hotel');
   }
   if (type.isRemote) {
     throw forbiddenError('Ticket is remote');
@@ -35,9 +35,8 @@ async function createBooking(userId: number, roomId: number) {
 
   // Chame a função do repositório para criar a reserva
   const bookingId = await bookingRepository.createBookingRepository(userId, roomId);
-
   if (!bookingId) {
-    throw notFoundBookingError('bookingId is not exist');
+    throw notFoundBookingError('bookingId does not exist');
   }
 
   return { bookingId };
@@ -45,13 +44,39 @@ async function createBooking(userId: number, roomId: number) {
 
 async function getBookingByUser(userId: number) {
   const booking = await bookingRepository.getBookingByUserRepository(userId);
-  if (!booking || !booking._count || booking._count.Booking === 0) {
-    throw notFoundBookingError('You dont have a booking yet');
+
+  if (!booking) {
+    throw notFoundBookingError('User has no booking.');
   }
+
   return booking;
+}
+
+async function putBookingByUserId(userId: number, roomId: number, bookingId: number) {
+  console.log(roomId);
+  const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
+
+  if (!room.id) {
+    throw notFoundBookingError('Room not exist');
+  }
+
+  if (reservationCount >= room.capacity) {
+    throw forbiddenError('Room is already full');
+  }
+
+  // Verifique se o usuário possui uma reserva para o quarto
+  const existingBooking = await bookingRepository.getBookingByUserRepository(userId);
+
+  if (!existingBooking) {
+    throw forbiddenError('User does not have a booking for this room');
+  }
+  const { id } = await bookingRepository.putBookingByUserIdRepository(bookingId, roomId);
+
+  return { bookingId: id };
 }
 
 export const bookingService = {
   createBooking,
   getBookingByUser,
+  putBookingByUserId,
 };

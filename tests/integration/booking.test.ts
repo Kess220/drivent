@@ -4,13 +4,16 @@ import httpStatus from 'http-status';
 import faker from '@faker-js/faker';
 import { cleanDb, generateValidToken } from '../helpers';
 import {
+  createBooking,
   createBookingData,
   createEnrollmentWithAddress,
   createRoom,
+  createRoomFull,
   createTicket,
   createTicketType,
   createUser,
 } from '../factories';
+import { createHotel, createRoomWithHotelId } from '../factories/hotels-factory';
 import { bookingService } from '@/services/booking-service';
 import { bookingRepository } from '@/repositories';
 import app, { init } from '@/app';
@@ -18,6 +21,7 @@ import app, { init } from '@/app';
 beforeAll(async () => {
   await init();
 });
+
 beforeEach(async () => {
   await cleanDb();
 });
@@ -61,7 +65,7 @@ describe('POST /booking (Token Authentication Tests)', () => {
     const enrollment = await createEnrollmentWithAddress(user);
     const ticketType = await createTicketType(false, true);
     await createTicket(enrollment.id, ticketType.id, 'PAID');
-    const room = await createRoom(1);
+    const room = await createRoomFull();
     await createBookingData(user.id, room.id);
 
     const user2 = await createUser();
@@ -75,6 +79,7 @@ describe('POST /booking (Token Authentication Tests)', () => {
       .send({ roomId: room.id });
     expect(status).toBe(httpStatus.FORBIDDEN);
   });
+
   it('Should respond with 200 (OK) if everything is ok', async () => {
     const user = await createUser();
     const token = await generateValidToken(user);
@@ -171,18 +176,18 @@ describe('Booking Service Get Booking Tests', () => {
 
   // Error prima count, não faço a minima ideia do que seja mas irei tentar resolver mais tarde
 
-  // it('Should respond with 200 (OK) if everything is ok', async () => {
-  //   const user = await createUser();
-  //   const token = await generateValidToken(user);
-  //   const enrollment = await createEnrollmentWithAddress(user);
-  //   const ticketType = await createTicketType(false, true);
-  //   await createTicket(enrollment.id, ticketType.id, 'PAID');
-  //   const room = await createRoom();
+  it('Should respond with 200 (OK) if everything is ok', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType(false, true);
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+    const createdHotel = await createHotel();
+    await createRoomWithHotelId(createdHotel.id);
 
-  //   console.log('roomId:', room.id);
-  //   createBookingData(user.id, 1);
-
-  //   const { status } = await server.post('/booking').set('Authorization', `Bearer ${token}`);
-  //   expect(status).toBe(httpStatus.OK);
-  // });
+    const room = await createRoom();
+    await createBooking(user.id, room.id);
+    const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.OK);
+  });
 });

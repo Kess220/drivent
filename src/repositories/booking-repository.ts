@@ -15,7 +15,7 @@ async function createBookingRepository(userId: number, roomId: number) {
 async function isRoomFull(roomId: number) {
   const reservationCount = await prisma.booking.count({
     where: {
-      roomId,
+      roomId: roomId,
     },
   });
 
@@ -47,4 +47,20 @@ async function getBookingByUserRepository(roomId: number) {
   });
 }
 
-export const bookingRepository = { createBookingRepository, isRoomFull, getBookingByUserRepository };
+async function putBookingByUserIdRepository(bookingId: number, roomId: number) {
+  return prisma.booking.update({
+    where: {
+      id: bookingId,
+    },
+    data: {
+      roomId,
+    },
+  });
+}
+
+export const bookingRepository = {
+  putBookingByUserIdRepository,
+  createBookingRepository,
+  isRoomFull,
+  getBookingByUserRepository,
+};
