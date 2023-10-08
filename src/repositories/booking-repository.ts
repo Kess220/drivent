@@ -32,7 +32,7 @@ async function isRoomFull(roomId: number) {
 }
 
 async function getBookingByUserRepository(roomId: number) {
-  const booking = await prisma.room.findFirst({
+  return await prisma.room.findUnique({
     where: {
       id: roomId,
     },
@@ -45,7 +45,6 @@ async function getBookingByUserRepository(roomId: number) {
       },
     },
   });
-  return booking;
 }
 
 export const bookingRepository = { createBookingRepository, isRoomFull, getBookingByUserRepository };
