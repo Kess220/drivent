@@ -4,7 +4,7 @@ import { bookingRepository } from '@/repositories/booking-repository';
 import { notFoundBookingError, forbiddenError } from '@/errors';
 import { enrollmentRepository, ticketsRepository } from '@/repositories';
 
-export async function createBooking(userId: number, roomId: number) {
+async function createBooking(userId: number, roomId: number) {
   // Verifique se o quarto está totalmente ocupado
   const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -43,6 +43,16 @@ export async function createBooking(userId: number, roomId: number) {
   return { bookingId };
 }
 
+async function getBookingByUser(userId: number) {
+  const resultBookingUser = await bookingRepository.getBookingByUserRepository(userId);
+
+  if (!resultBookingUser) {
+    notFoundBookingError('Not have booking');
+  }
+
+  return resultBookingUser;
+}
 export const bookingService = {
   createBooking,
+  getBookingByUser,
 };

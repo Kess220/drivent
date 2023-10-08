@@ -14,3 +14,9 @@ export async function createBookingController(req: AuthenticatedRequest, res: Re
   // Retorne a resposta com o ID da reserva criada
   res.status(httpStatus.OK).json({ bookingId });
 }
+
+export async function getBookingByUserController(req: AuthenticatedRequest, res: Response) {
+  const bookingController = await bookingService.getBookingByUser(req.userId);
+
+  res.status(httpStatus.OK).send({ bookingId: bookingController });
+}

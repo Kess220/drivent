@@ -443,3 +443,34 @@ describe('Booking Service Tests', () => {
     });
   });
 });
+
+describe('Booking Service Test GET', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should get booking details by ID', async () => {
+    // ID de reserva de exemplo
+    const userId = 1;
+
+    // Dados simulados de reserva para o ID de reserva fornecido
+    const mockBookingData = {
+      capacity: 2,
+      _count: {
+        Booking: 1,
+      },
+    };
+
+    // Use spyOn para substituir a implementação de findById no bookingRepository
+    jest.spyOn(bookingRepository, 'getBookingByUserRepository').mockResolvedValue(mockBookingData);
+
+    // Chame a função get do bookingService
+    const result = await bookingService.getBookingByUser(userId);
+
+    // Verifique se a função findById foi chamada com o ID correto
+    expect(bookingRepository.getBookingByUserRepository).toHaveBeenCalledWith(userId);
+
+    // Verifique se o resultado é o objeto de reserva simulado
+    expect(result).toEqual(mockBookingData);
+  });
+});
