@@ -444,33 +444,78 @@ describe('Booking Service Tests', () => {
   });
 });
 
-describe('Booking Service Test GET', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('PUT /booking', () => {
+  it('not have a booking for this room', async () => {
+    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+      return null;
+    });
+
+    const promise = bookingService.putBookingByUserId(1, 1, 1);
+
+    await expect(promise).rejects.toEqual({
+      name: 'ForbiddenError',
+      message: 'User does not have a booking for this room',
+    });
   });
 
-  test('should get booking details by ID', async () => {
-    // ID de reserva de exemplo
-    const userId = 1;
+  // it('room not', async () => {
+  //   jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+  //     return {
+  //       capacity: 1,
+  //       _count: {
+  //         Booking: 1,
+  //       },
+  //     };
+  //   });
+  //   const promise = bookingService.putBookingByUserId(1, 1, 1);
+  //   await expect(promise).rejects.toEqual({
+  //     name: 'NotFoundBookingErrorr',
+  //     message: 'Room not exist',
+  //   });
+  // });
 
-    // Dados simulados de reserva para o ID de reserva fornecido
-    const mockBookingData = {
-      capacity: 2,
-      _count: {
+  it('Room not exist', async () => {
+    jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
+      return {
+        capacity: 10,
+        _count: {
+          Booking: 1,
+        },
+      };
+    });
+    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+      return {
         Booking: 1,
-      },
-    };
+      };
+    });
+    const promise = bookingService.putBookingByUserId(1, 1, 1);
+    expect(promise).rejects.toEqual({
+      name: 'NotFoundBookingError',
+      message: 'Room not exist',
+    });
+  });
 
-    // Use spyOn para substituir a implementação de findById no bookingRepository
-    jest.spyOn(bookingRepository, 'getBookingByUserRepository').mockResolvedValue(mockBookingData);
-
-    // Chame a função get do bookingService
-    const result = await bookingService.getBookingByUser(userId);
-
-    // Verifique se a função findById foi chamada com o ID correto
-    expect(bookingRepository.getBookingByUserRepository).toHaveBeenCalledWith(userId);
-
-    // Verifique se o resultado é o objeto de reserva simulado
-    expect(result).toEqual(mockBookingData);
+  it('Should return the booking when the user edit it', async () => {
+    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+      return {
+        capacity: 10,
+        _count: {
+          Booking: 1,
+        },
+      };
+    });
+    jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
+      return {
+        Booking: {},
+      };
+    });
+    const id = 1;
+    jest.spyOn(bookingRepository, 'putBookingByUserIdRepository').mockImplementationOnce((): any => {
+      return {
+        id,
+      };
+    });
+    const promise = bookingService.putBookingByUserId(1, 1, 1);
+    expect(promise).resolves.toEqual({ bookingId: id });
   });
 });

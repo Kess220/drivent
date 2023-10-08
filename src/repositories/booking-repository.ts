@@ -58,9 +58,26 @@ async function putBookingByUserIdRepository(bookingId: number, roomId: number) {
   });
 }
 
+async function getRoomByUserId(roomId: number) {
+  return await prisma.room.findUnique({
+    where: {
+      id: roomId,
+    },
+    select: {
+      capacity: true,
+      _count: {
+        select: {
+          Booking: true,
+        },
+      },
+    },
+  });
+}
+
 export const bookingRepository = {
   putBookingByUserIdRepository,
   createBookingRepository,
   isRoomFull,
   getBookingByUserRepository,
+  getRoomByUserId,
 };

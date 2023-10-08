@@ -56,7 +56,7 @@ async function putBookingByUserId(userId: number, roomId: number, bookingId: num
   console.log(roomId);
   const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
 
-  if (!room.id) {
+  if (!room) {
     throw notFoundBookingError('Room not exist');
   }
 
