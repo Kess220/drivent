@@ -53,7 +53,6 @@ async function getBookingByUser(userId: number) {
 }
 
 async function putBookingByUserId(userId: number, roomId: number, bookingId: number) {
-  console.log(roomId);
   const { room, reservationCount } = await bookingRepository.isRoomFull(roomId);
 
   if (!room) {

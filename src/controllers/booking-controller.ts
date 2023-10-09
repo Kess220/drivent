@@ -24,7 +24,6 @@ export async function getBookingByUserController(req: AuthenticatedRequest, res:
 
 export async function putBookingByUserIdController(req: AuthenticatedRequest, res: Response) {
   const body = req.body as InputBookingBody;
-  console.log(body);
 
   const bookingId = parseInt(req.params.bookingId) as number;
   const booking = await bookingService.putBookingByUserId(req.userId, body.roomId, bookingId);
