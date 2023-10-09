@@ -445,7 +445,7 @@ describe('Booking Service Tests', () => {
 });
 
 describe('GET /booking', () => {
-  it('Should throw return the booking when the user have one', async () => {
+  it('User not booking', async () => {
     const bookingData: {
       Booking: {
         id: number;
@@ -465,20 +465,20 @@ describe('GET /booking', () => {
   });
 });
 
-// describe('PUT /booking', () => {
-//   it('User does not gave booking', async () => {
-//     jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
-//       return null;
-//     });
+describe('PUT /booking', () => {
+  it('Room is full', async () => {
+    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+      return null;
+    });
 
-//     const promise = bookingService.putBookingByUserId(1, 1, 1);
+    const promise = bookingService.putBookingByUserId(1, 1, 1);
 
-//     await expect(promise).rejects.toEqual({
-//       name: 'ForbiddenError',
-//       message: 'User does not have a booking for this room',
-//     });
-//   });
-// });
+    await expect(promise).rejects.toEqual({
+      name: 'ForbiddenError',
+      message: 'Room is already full',
+    });
+  });
+});
 
 describe('PUT /booking', () => {
   it('Room not exist', async () => {

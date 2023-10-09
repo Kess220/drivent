@@ -69,8 +69,6 @@ async function getRoomByUserId(roomId: number) {
     },
     select: {
       id: true,
-      name: true,
-
       capacity: true,
       _count: {
         select: {
