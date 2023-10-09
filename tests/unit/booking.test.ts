@@ -475,7 +475,7 @@ describe('PUT /booking', () => {
 
     await expect(promise).rejects.toEqual({
       name: 'ForbiddenError',
-      message: 'Room is already full',
+      message: 'User does not have a booking for this room',
     });
   });
 });

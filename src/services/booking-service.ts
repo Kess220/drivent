@@ -59,16 +59,16 @@ async function putBookingByUserId(userId: number, roomId: number, bookingId: num
     throw notFoundBookingError('Room not exist');
   }
 
-  if (room.capacity >= reservationCount) {
+  if (room.capacity <= reservationCount) {
     throw forbiddenError('Room is already full');
   }
-
   // Verifique se o usuário possui uma reserva para o quarto
-  const existingBooking = await bookingRepository.getBookingByUserRepository(userId);
+  const existingBooking = await bookingRepository.findBookingByUserId(userId);
 
   if (!existingBooking) {
     throw forbiddenError('User does not have a booking for this room');
   }
+
   const { id } = await bookingRepository.putBookingByUserIdRepository(bookingId, roomId);
 
   return { bookingId: id };
