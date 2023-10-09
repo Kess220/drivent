@@ -43,7 +43,7 @@ async function createBooking(userId: number, roomId: number) {
 }
 
 async function getBookingByUser(userId: number) {
-  const booking = await bookingRepository.getBookingByUserRepository(userId);
+  const booking = await bookingRepository.findBookingByUserId(userId);
 
   if (!booking) {
     throw notFoundBookingError('User has no booking.');

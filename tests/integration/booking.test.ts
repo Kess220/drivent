@@ -162,6 +162,15 @@ describe('ticket', () => {
     expect(status).toBe(httpStatus.OK);
   });
 });
+// GET TESTES
+describe('GET/booking when token is valid', () => {
+  it('Token invalid', async () => {
+    await createUser();
+    const token = 'Invalid Token';
+    const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.UNAUTHORIZED);
+  });
+});
 
 describe('when token is valid', () => {
   it('Should respond with 404 (NOT_FOUND) if the user doesnt have a booking', async () => {
@@ -169,5 +178,17 @@ describe('when token is valid', () => {
     const token = await generateValidToken(user);
     const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
     expect(status).toBe(httpStatus.NOT_FOUND);
+  });
+
+  it('Should respond with 200 (OK) if everything is ok', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType(false, true);
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+    const room = await createRoom();
+    await createBooking(user.id, room.id);
+    const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.OK);
   });
 });
