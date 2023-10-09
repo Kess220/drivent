@@ -73,8 +73,8 @@ describe('POST /booking (Token Authentication Tests)', () => {
 
     const user2 = await createUser();
     const tokenUser2 = await generateValidToken(user2);
-    const enrollment2 = await createEnrollmentWithAddress(user2);
-    await createTicket(enrollment2.id, ticketType.id, 'PAID');
+    const enrollmentUser2 = await createEnrollmentWithAddress(user2);
+    await createTicket(enrollmentUser2.id, ticketType.id, 'PAID');
 
     const { status } = await server
       .post('/booking')
@@ -191,5 +191,60 @@ describe('when token is valid', () => {
 
     const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
     expect(status).toBe(httpStatus.OK);
+  });
+});
+
+// PUT /booking
+
+describe('PUT /booking', () => {
+  it('Room dont exist', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType(false, true);
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+    const room = await createRoom();
+    const booking = await createBooking(user.id, room.id);
+    const { status } = await server
+      .put(`/booking/${booking.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId: room.id + 1 });
+    expect(status).toBe(httpStatus.NOT_FOUND);
+  });
+
+  it('User not booking', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const room = await createRoom();
+    const { status } = await server
+      .put(`/booking/${1}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ roomId: room.id });
+    expect(status).toBe(httpStatus.FORBIDDEN);
+  });
+});
+
+describe('Room PUT full', () => {
+  it('Room is full PUT', async () => {
+    const user = await createUser();
+    await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType(false, true);
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+    const room = await createRoom(1);
+    await createBooking(user.id, room.id);
+
+    const user2 = await createUser();
+    const tokenUser2 = await generateValidToken(user2);
+    const enrollmentUser2 = await createEnrollmentWithAddress(user2);
+    await createTicket(enrollmentUser2.id, ticketType.id, 'PAID');
+    const roomtoupdate = await createRoom();
+    const booking2 = await createBooking(user2.id, roomtoupdate.id);
+
+    const { status } = await server
+      .put(`/booking/${booking2.id}`)
+      .set('Authorization', `Bearer ${tokenUser2}`)
+      .send({ roomId: room.id });
+    expect(status).toBe(httpStatus.FORBIDDEN);
   });
 });
