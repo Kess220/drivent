@@ -59,7 +59,7 @@ async function putBookingByUserId(userId: number, roomId: number, bookingId: num
     throw notFoundBookingError('Room not exist');
   }
 
-  if (reservationCount >= room.capacity) {
+  if (room.capacity >= reservationCount) {
     throw forbiddenError('Room is already full');
   }
 

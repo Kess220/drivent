@@ -48,14 +48,18 @@ async function getBookingByUserRepository(roomId: number) {
 }
 
 async function putBookingByUserIdRepository(bookingId: number, roomId: number) {
-  return prisma.booking.update({
+  const booking = await prisma.booking.update({
     where: {
       id: bookingId,
     },
     data: {
       roomId,
     },
+    select: {
+      id: true,
+    },
   });
+  return booking;
 }
 
 async function getRoomByUserId(roomId: number) {
@@ -64,6 +68,9 @@ async function getRoomByUserId(roomId: number) {
       id: roomId,
     },
     select: {
+      id: true,
+      name: true,
+
       capacity: true,
       _count: {
         select: {
@@ -75,24 +82,20 @@ async function getRoomByUserId(roomId: number) {
 }
 
 async function findBookingByUserId(userId: number) {
-  const booking = await prisma.booking.findUnique({
-    where: { userId },
+  return await prisma.room.findUnique({
+    where: {
+      id: userId,
+    },
     select: {
       id: true,
-      Room: {
-        select: {
-          capacity: true,
-          _count: {
-            select: {
-              Booking: true,
-            },
-          },
-        },
-      },
+      name: true,
+
+      capacity: true,
+      hotelId: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
-
-  return booking;
 }
 
 export const bookingRepository = {

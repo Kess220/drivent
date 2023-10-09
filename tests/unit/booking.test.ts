@@ -9,7 +9,7 @@ jest.mock('@/repositories/booking-repository');
 
 describe('Booking Service Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks(); // Redefine as mocks antes de cada teste
+    jest.clearAllMocks();
   });
 
   test('1 - should create a booking successfully', async () => {
@@ -465,17 +465,35 @@ describe('GET /booking', () => {
   });
 });
 
+// describe('PUT /booking', () => {
+//   it('User does not gave booking', async () => {
+//     jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+//       return null;
+//     });
+
+//     const promise = bookingService.putBookingByUserId(1, 1, 1);
+
+//     await expect(promise).rejects.toEqual({
+//       name: 'ForbiddenError',
+//       message: 'User does not have a booking for this room',
+//     });
+//   });
+// });
+
 describe('PUT /booking', () => {
-  it('not have a booking for this room', async () => {
-    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
-      return null;
+  it('Room not exist', async () => {
+    jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
+      return {
+        capacity: 1,
+        _count: {
+          Booking: 1,
+        },
+      };
     });
-
     const promise = bookingService.putBookingByUserId(1, 1, 1);
-
-    await expect(promise).rejects.toEqual({
-      name: 'ForbiddenError',
-      message: 'User does not have a booking for this room',
+    expect(promise).rejects.toEqual({
+      name: 'NotFoundBookingError',
+      message: 'Room not exist',
     });
   });
 });
