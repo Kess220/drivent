@@ -2,23 +2,17 @@
 import supertest from 'supertest';
 import httpStatus from 'http-status';
 import faker from '@faker-js/faker';
-import { TicketStatus } from '@prisma/client';
 import { cleanDb, generateValidToken } from '../helpers';
 import {
   createBooking,
   createBookingData,
-  createBookingOk,
   createEnrollmentWithAddress,
-  createPayment,
   createRoom,
   createRoomFull,
   createTicket,
   createTicketType,
   createUser,
 } from '../factories';
-import { createHotel, createRoomWithHotelId } from '../factories/hotels-factory';
-import { bookingService } from '@/services/booking-service';
-import { bookingRepository } from '@/repositories';
 import app, { init } from '@/app';
 
 beforeAll(async () => {
