@@ -256,12 +256,8 @@ describe('Status Ok', () => {
     const ticketType = await createTicketType(false, true);
     await createTicket(enrollment.id, ticketType.id, 'PAID');
     const room = await createRoom();
-    console.log(room);
     const room2 = await createRoom();
-    console.log(room2);
     const booking = await createBooking(user.id, room.id);
-    console.log(user.id, room.id);
-    console.log(booking.Room.capacity, booking.Room.hotelId);
     const { status } = await server
       .put(`/booking/${booking.id}`)
       .set('Authorization', `Bearer ${token}`)
