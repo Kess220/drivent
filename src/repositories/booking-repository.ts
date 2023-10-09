@@ -82,20 +82,16 @@ async function getRoomByUserId(roomId: number) {
 }
 
 async function findBookingByUserId(userId: number) {
-  return await prisma.room.findUnique({
-    where: {
-      id: userId,
-    },
+  const booking = await prisma.booking.findFirst({
     select: {
       id: true,
-      name: true,
-
-      capacity: true,
-      hotelId: true,
-      createdAt: true,
-      updatedAt: true,
+      Room: true,
+    },
+    where: {
+      userId: userId,
     },
   });
+  return booking;
 }
 
 export const bookingRepository = {

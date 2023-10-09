@@ -180,15 +180,16 @@ describe('when token is valid', () => {
     expect(status).toBe(httpStatus.NOT_FOUND);
   });
 
-  // it('Should respond with 200 (OK) if everything is ok', async () => {
-  //   const user = await createUser();
-  //   const token = await generateValidToken(user);
-  //   const enrollment = await createEnrollmentWithAddress(user);
-  //   const ticketType = await createTicketType(false, true);
-  //   await createTicket(enrollment.id, ticketType.id, 'PAID');
-  //   const room = await createRoom();
-  //   await createBooking(user.id, room.id);
-  //   const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
-  //   expect(status).toBe(httpStatus.OK);
-  // });
+  it('Should respond with 200 (OK) if everything is ok', async () => {
+    const user = await createUser();
+    const token = await generateValidToken(user);
+    const enrollment = await createEnrollmentWithAddress(user);
+    const ticketType = await createTicketType(false, true);
+    await createTicket(enrollment.id, ticketType.id, 'PAID');
+    const room = await createRoom();
+    await createBooking(user.id, room.id);
+
+    const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
+    expect(status).toBe(httpStatus.OK);
+  });
 });
