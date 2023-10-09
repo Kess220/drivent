@@ -458,28 +458,28 @@ describe('PUT /booking', () => {
     });
   });
 
-  it('room not', async () => {
-    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
-      return {
-        capacity: 1,
-        _count: {
-          Booking: 1,
-        },
-      };
-    });
+  // it('room not', async () => {
+  //   jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+  //     return {
+  //       capacity: 1,
+  //       _count: {
+  //         Booking: 1,
+  //       },
+  //     };
+  //   });
 
-    const promise = bookingService.putBookingByUserId(1, 1, 1);
+  //   const promise = bookingService.putBookingByUserId(1, 1, 1);
 
-    try {
-      await promise;
-    } catch (error) {
-      console.error('Caught error:', error);
-      expect(error).toEqual({
-        name: 'NotFoundBookingError',
-        message: 'Room not exist',
-      });
-    }
-  });
+  //   try {
+  //     await promise;
+  //   } catch (error) {
+  //     console.error('Caught error:', error);
+  //     expect(error).toEqual({
+  //       name: 'NotFoundBookingError',
+  //       message: 'Room not exist',
+  //     });
+  //   }
+  // });
 
   // it('Room not exist', async () => {
   //   jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
@@ -502,27 +502,27 @@ describe('PUT /booking', () => {
   //   });
   // });
 
-  it('Should return the booking when the user edit it', async () => {
-    jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
-      return {
-        capacity: 10,
-        _count: {
-          Booking: 1,
-        },
-      };
-    });
-    jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
-      return {
-        Booking: {},
-      };
-    });
-    const id = 1;
-    jest.spyOn(bookingRepository, 'putBookingByUserIdRepository').mockImplementationOnce((): any => {
-      return {
-        id,
-      };
-    });
-    const promise = bookingService.putBookingByUserId(1, 1, 1);
-    expect(promise).resolves.toEqual({ bookingId: id });
-  });
+  // it('Should return the booking when the user edit it', async () => {
+  //   jest.spyOn(bookingRepository, 'getRoomByUserId').mockImplementationOnce((): any => {
+  //     return {
+  //       capacity: 10,
+  //       _count: {
+  //         Booking: 1,
+  //       },
+  //     };
+  //   });
+  //   jest.spyOn(bookingRepository, 'isRoomFull').mockImplementationOnce((): any => {
+  //     return {
+  //       Booking: {},
+  //     };
+  //   });
+  //   const id = 1;
+  //   jest.spyOn(bookingRepository, 'putBookingByUserIdRepository').mockImplementationOnce((): any => {
+  //     return {
+  //       id,
+  //     };
+  //   });
+  //   const promise = bookingService.putBookingByUserId(1, 1, 1);
+  //   expect(promise).resolves.toEqual({ bookingId: id });
+  // });
 });

@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import faker from '@faker-js/faker';
+import { User } from '@prisma/client';
 import { prisma } from '@/config';
 
 // Função para gerar dados fictícios de reserva
@@ -36,7 +37,7 @@ async function createRoom(capacity = capacityNumber) {
   });
 }
 
-export async function createBookingTrue(userId: number, roomId: number) {
+async function createBooking(userId: number, roomId: number) {
   return await prisma.booking.create({
     data: {
       userId,
@@ -45,13 +46,11 @@ export async function createBookingTrue(userId: number, roomId: number) {
     select: {
       id: true,
       Room: true,
-      userId: true,
-      roomId: true,
     },
   });
 }
 
-async function createBooking(userId: number, roomId: number) {
+export async function createBookingOk(userId: number, roomId: number) {
   return await prisma.booking.create({
     data: {
       userId,

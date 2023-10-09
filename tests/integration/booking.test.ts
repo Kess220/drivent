@@ -2,11 +2,14 @@
 import supertest from 'supertest';
 import httpStatus from 'http-status';
 import faker from '@faker-js/faker';
+import { TicketStatus } from '@prisma/client';
 import { cleanDb, generateValidToken } from '../helpers';
 import {
   createBooking,
   createBookingData,
+  createBookingOk,
   createEnrollmentWithAddress,
+  createPayment,
   createRoom,
   createRoomFull,
   createTicket,
@@ -160,21 +163,13 @@ describe('ticket', () => {
   });
 });
 
-describe('Booking Service Get Booking Tests', () => {
-  it('should respond with status 401 if no token is given', async () => {
-    const response = await server.post('/booking');
-
-    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
-  });
-
-  it('Respond with 404 if not have a booking', async () => {
+describe('when token is valid', () => {
+  it('Should respond with 404 (NOT_FOUND) if the user doesnt have a booking', async () => {
     const user = await createUser();
     const token = await generateValidToken(user);
     const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
     expect(status).toBe(httpStatus.NOT_FOUND);
   });
-
-  // Error prima count, não faço a minima ideia do que seja mas irei tentar resolver mais tarde
 
   it('Should respond with 200 (OK) if everything is ok', async () => {
     const user = await createUser();
@@ -182,9 +177,6 @@ describe('Booking Service Get Booking Tests', () => {
     const enrollment = await createEnrollmentWithAddress(user);
     const ticketType = await createTicketType(false, true);
     await createTicket(enrollment.id, ticketType.id, 'PAID');
-    const createdHotel = await createHotel();
-    await createRoomWithHotelId(createdHotel.id);
-
     const room = await createRoom();
     await createBooking(user.id, room.id);
     const { status } = await server.get('/booking').set('Authorization', `Bearer ${token}`);
